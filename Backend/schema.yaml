@@ -1,0 +1,1953 @@
+openapi: 3.0.3
+info:
+  title: Hive API
+  version: 1.0.0
+  description: MVP backend for Hive event planning.
+paths:
+  /api/auth/register:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/auth/token:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/comments/{id}/reactions:
+    post:
+      operationId: comments_reactions_create
+      description: POST to toggle a reaction on a comment. Same emoji = remove; new
+        emoji = add.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reaction'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reaction'
+          description: ''
+  /api/events:
+    get:
+      operationId: events_list
+      parameters:
+      - in: query
+        name: location
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: starts_at
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventList'
+          description: ''
+    post:
+      operationId: events_create
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/events/{id}:
+    get:
+      operationId: events_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    patch:
+      operationId: events_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/events/{id}/comments:
+    get:
+      operationId: events_comments_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentList'
+          description: ''
+    post:
+      operationId: events_comments_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentCreate'
+          description: ''
+  /api/events/{id}/contributions:
+    get:
+      operationId: events_contributions_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContributionItemList'
+          description: ''
+    post:
+      operationId: events_contributions_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContributionItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContributionItem'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionItem'
+          description: ''
+  /api/events/{id}/custom-fields:
+    get:
+      operationId: events_custom_fields_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomFieldDefinitionList'
+          description: ''
+    post:
+      operationId: events_custom_fields_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomFieldDefinition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomFieldDefinition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomFieldDefinition'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomFieldDefinition'
+          description: ''
+  /api/events/{id}/documents:
+    get:
+      operationId: events_documents_list
+      description: |-
+        List and upload documents for an event.
+        DEV_ONLY: Files stored under MEDIA_ROOT
+        DOCKER_TARGET: storage (MinIO / S3)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentList'
+          description: ''
+    post:
+      operationId: events_documents_create
+      description: |-
+        List and upload documents for an event.
+        DEV_ONLY: Files stored under MEDIA_ROOT
+        DOCKER_TARGET: storage (MinIO / S3)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Document'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Document'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Document'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/events/{id}/gallery:
+    get:
+      operationId: events_gallery_list
+      description: |-
+        List and upload images to the event gallery.
+        DEV_ONLY: Images stored under MEDIA_ROOT
+        DOCKER_TARGET: storage (MinIO / S3)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventImageList'
+          description: ''
+    post:
+      operationId: events_gallery_create
+      description: |-
+        List and upload images to the event gallery.
+        DEV_ONLY: Images stored under MEDIA_ROOT
+        DOCKER_TARGET: storage (MinIO / S3)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventImage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventImage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventImage'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventImage'
+          description: ''
+  /api/events/{id}/invites:
+    post:
+      operationId: events_invites_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteBatchCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InviteBatchCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InviteBatchCreate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteBatchCreate'
+          description: ''
+  /api/events/{id}/me:
+    patch:
+      operationId: events_me_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedParticipationSelfUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedParticipationSelfUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedParticipationSelfUpdate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipationSelfUpdate'
+          description: ''
+  /api/events/{id}/participants:
+    get:
+      operationId: events_participants_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: rsvp_status
+        schema:
+          type: string
+          enum:
+          - accepted
+          - declined
+          - pending
+        description: |-
+          * `pending` - Pending
+          * `accepted` - Accepted
+          * `declined` - Declined
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedParticipationList'
+          description: ''
+  /api/events/{id}/polls:
+    get:
+      operationId: events_polls_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPollList'
+          description: ''
+    post:
+      operationId: events_polls_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Poll'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Poll'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Poll'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+          description: ''
+  /api/invites/{token}/respond:
+    post:
+      operationId: invites_respond_create
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - invites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteRespond'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InviteRespond'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InviteRespond'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteRespond'
+          description: ''
+  /api/polls/{id}/results:
+    get:
+      operationId: polls_results_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - polls
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollResults'
+          description: ''
+  /api/polls/{id}/vote:
+    post:
+      operationId: polls_vote_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - polls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VoteInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VoteInput'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoteResponse'
+          description: ''
+  /api/schema:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/CommentUser'
+          readOnly: true
+        parent:
+          type: integer
+          nullable: true
+        text:
+          type: string
+          maxLength: 2000
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reaction'
+          readOnly: true
+        reply_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - reactions
+      - reply_count
+      - text
+      - updated_at
+      - user
+    CommentCreate:
+      type: object
+      properties:
+        text:
+          type: string
+          maxLength: 2000
+        parent:
+          type: integer
+          nullable: true
+      required:
+      - text
+    CommentUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - id
+      - username
+    ContributionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        participation:
+          type: integer
+        item_name:
+          type: string
+          maxLength: 255
+        quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - item_name
+      - updated_at
+    ContributionItemInput:
+      type: object
+      properties:
+        item_name:
+          type: string
+          maxLength: 255
+        quantity:
+          type: integer
+          minimum: 1
+          default: 1
+        notes:
+          type: string
+          default: ''
+      required:
+      - item_name
+    CustomFieldDefinition:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        key:
+          type: string
+          maxLength: 64
+          pattern: ^[-a-zA-Z0-9_]+$
+        label:
+          type: string
+          maxLength: 120
+        field_type:
+          $ref: '#/components/schemas/FieldTypeEnum'
+        required:
+          type: boolean
+        options: {}
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - field_type
+      - id
+      - key
+      - label
+    CustomFieldValue:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        definition:
+          type: integer
+        definition_key:
+          type: string
+          readOnly: true
+        value: {}
+      required:
+      - definition
+      - definition_key
+      - id
+      - value
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        uploaded_by:
+          allOf:
+          - $ref: '#/components/schemas/CommentUser'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        file:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - file
+      - id
+      - uploaded_by
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/EventOwner'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed event description (Markdown allowed).
+        location:
+          type: string
+          maxLength: 255
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        dresscode:
+          type: string
+          maxLength: 255
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - location
+      - owner
+      - starts_at
+      - updated_at
+    EventImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        uploaded_by:
+          allOf:
+          - $ref: '#/components/schemas/CommentUser'
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        caption:
+          type: string
+          maxLength: 500
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - image
+      - uploaded_by
+    EventOwner:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+      required:
+      - id
+      - username
+    FieldTypeEnum:
+      enum:
+      - text
+      - number
+      - bool
+      - enum
+      type: string
+      description: |-
+        * `text` - Text
+        * `number` - Number
+        * `bool` - Boolean
+        * `enum` - Enum
+    InviteBatchCreate:
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+        user_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        expires_in_hours:
+          type: integer
+          maximum: 2160
+          minimum: 1
+    InviteRespond:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - status
+    PaginatedCommentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    PaginatedContributionItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionItem'
+    PaginatedCustomFieldDefinitionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldDefinition'
+    PaginatedDocumentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+    PaginatedEventImageList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventImage'
+    PaginatedEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    PaginatedParticipationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participation'
+    PaginatedPollList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Poll'
+    Participation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/ParticipationUser'
+          readOnly: true
+        rsvp_status:
+          $ref: '#/components/schemas/RsvpStatusEnum'
+        plus_one_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        allergies:
+          type: string
+          maxLength: 500
+        notes:
+          type: string
+        dresscode_visible:
+          type: boolean
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionItem'
+          readOnly: true
+        custom_field_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValue'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - contributions
+      - created_at
+      - custom_field_values
+      - event
+      - id
+      - updated_at
+      - user
+    ParticipationSelfUpdate:
+      type: object
+      properties:
+        rsvp_status:
+          $ref: '#/components/schemas/RsvpStatusEnum'
+        plus_one_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        allergies:
+          type: string
+          maxLength: 500
+        notes:
+          type: string
+        dresscode_visible:
+          type: boolean
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionItemInput'
+        custom_field_answers:
+          type: object
+          additionalProperties: {}
+    ParticipationUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+      required:
+      - id
+      - username
+    PatchedEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/EventOwner'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed event description (Markdown allowed).
+        location:
+          type: string
+          maxLength: 255
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        dresscode:
+          type: string
+          maxLength: 255
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedParticipationSelfUpdate:
+      type: object
+      properties:
+        rsvp_status:
+          $ref: '#/components/schemas/RsvpStatusEnum'
+        plus_one_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        allergies:
+          type: string
+          maxLength: 500
+        notes:
+          type: string
+        dresscode_visible:
+          type: boolean
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionItemInput'
+        custom_field_answers:
+          type: object
+          additionalProperties: {}
+    Poll:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        question:
+          type: string
+          maxLength: 500
+        allows_multiple:
+          type: boolean
+        opens_at:
+          type: string
+          format: date-time
+          nullable: true
+        closes_at:
+          type: string
+          format: date-time
+          nullable: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollOption'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - options
+      - question
+      - updated_at
+    PollOption:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          maxLength: 255
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - label
+    PollResultOption:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        label:
+          type: string
+        vote_count:
+          type: integer
+          minimum: 0
+      required:
+      - id
+      - label
+      - vote_count
+    PollResults:
+      type: object
+      properties:
+        poll_id:
+          type: integer
+          minimum: 1
+        question:
+          type: string
+        allows_multiple:
+          type: boolean
+        total_votes:
+          type: integer
+          minimum: 0
+        unique_voters:
+          type: integer
+          minimum: 0
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollResultOption'
+      required:
+      - allows_multiple
+      - options
+      - poll_id
+      - question
+      - total_votes
+      - unique_voters
+    Reaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        comment:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/CommentUser'
+          readOnly: true
+        emoji:
+          type: string
+          description: "Emoji shortcode, e.g. \U0001F44D or :thumbsup:"
+          maxLength: 32
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - comment
+      - created_at
+      - emoji
+      - id
+      - user
+    Register:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - id
+      - password
+      - username
+    RsvpStatusEnum:
+      enum:
+      - pending
+      - accepted
+      - declined
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `accepted` - Accepted
+        * `declined` - Declined
+    StatusEnum:
+      enum:
+      - accepted
+      - declined
+      type: string
+      description: |-
+        * `accepted` - accepted
+        * `declined` - declined
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    VoteInput:
+      type: object
+      properties:
+        option_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - option_ids
+    VoteResponse:
+      type: object
+      properties:
+        poll_id:
+          type: integer
+          minimum: 1
+        selected_option_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - poll_id
+      - selected_option_ids
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

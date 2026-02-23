@@ -1,0 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  body {
+    @apply m-0 font-sans antialiased bg-[#0f0f1a] text-gray-100;
+  }
+
+  #root {
+    @apply min-h-screen bg-[#0f0f1a];
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply mt-0 text-white font-semibold;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  p {
+    @apply my-2 text-gray-300;
+  }
+
+  a {
+    @apply text-purple-400 no-underline transition-colors hover:text-purple-300;
+  }
+}
+
+@layer components {
+  /* Smooth scrolling */
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    @apply w-3;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-[#0f0f1a];
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#2d2d44] rounded-full hover:bg-[#252538];
+  }
+
+  /* Navbar - Modern glassmorphism */
+  .navbar {
+    @apply bg-[#1a1a2e]/80 backdrop-blur-xl border-b border-[#2d2d44];
+    @apply text-white px-4 sm:px-6 py-4 flex justify-between items-center sticky top-0 z-50 relative;
+    @apply shadow-lg shadow-purple-900/20;
+  }
+
+  .nav-brand a {
+    @apply text-white no-underline text-2xl font-bold;
+    @apply bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent;
+    @apply transition-all duration-300 hover:from-purple-300 hover:to-purple-500;
+  }
+
+  .nav-links {
+    @apply flex gap-6 items-center;
+  }
+
+  .nav-links a {
+    @apply text-gray-300 no-underline font-medium transition-colors duration-200;
+    @apply hover:text-purple-400;
+  }
+
+  .nav-user {
+    @apply text-gray-400 text-sm;
+  }
+
+  .nav-button {
+    @apply bg-purple-600 text-white border-none px-4 py-2 rounded-lg cursor-pointer;
+    @apply font-medium transition-all duration-200;
+    @apply hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-600/50;
+    @apply active:scale-95;
+  }
+
+  .nav-button-icon {
+    @apply bg-transparent border-none p-1 text-gray-300 cursor-pointer shadow-none;
+    @apply hover:text-white hover:bg-transparent hover:shadow-none;
+    @apply active:scale-100 transition-colors;
+  }
+
+  /* Page container */
+  .page-container {
+    @apply max-w-7xl mx-auto my-6 sm:my-8 px-4 sm:px-6;
+  }
+
+  /* Form styles */
+  .form-container {
+    @apply max-w-md mx-auto my-6 sm:my-8 p-4 sm:p-8 bg-[#1a1a2e] border border-[#2d2d44] rounded-2xl;
+    @apply shadow-2xl shadow-purple-900/10;
+  }
+
+  .form-group {
+    @apply mb-6;
+  }
+
+  .form-group label {
+    @apply block mb-2 font-semibold text-gray-200 text-sm uppercase tracking-wide;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    @apply w-full px-4 py-3 bg-[#0f0f1a] border border-[#2d2d44] rounded-lg;
+    @apply text-gray-100 placeholder-gray-500 text-base;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent;
+    @apply hover:border-[#252538];
+  }
+
+  .form-group textarea {
+    @apply min-h-[120px] resize-y;
+  }
+
+  /* Date/Time input specific styling - make placeholder gray until value is entered */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    color: #6b7280 !important; /* gray-500 */
+  }
+
+  /* When input has a value, make it white */
+  input[type="date"]:focus,
+  input[type="datetime-local"]:focus,
+  input[type="time"]:focus {
+    color: #6b7280 !important;
+  }
+
+  input[type="date"]:valid,
+  input[type="datetime-local"]:valid,
+  input[type="time"]:valid {
+    color: #f3f4f6 !important; /* gray-100 - white */
+  }
+
+  /* For webkit browsers - target the placeholder differently */
+  input[type="date"]::-webkit-datetime-edit,
+  input[type="datetime-local"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit {
+    color: #6b7280; /* gray-500 */
+  }
+
+  input[type="date"]:focus::-webkit-datetime-edit,
+  input[type="datetime-local"]:focus::-webkit-datetime-edit,
+  input[type="time"]:focus::-webkit-datetime-edit {
+    color: #6b7280; /* gray-500 */
+  }
+
+  /* When a value is selected, make it white */
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+    color: #6b7280;
+  }
+
+  input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit,
+  input[type="datetime-local"]:not(:placeholder-shown)::-webkit-datetime-edit,
+  input[type="time"]:not(:placeholder-shown)::-webkit-datetime-edit {
+    color: #f3f4f6 !important;
+  }
+
+  /* Also style for inputs outside .form-group */
+  .form-group input[type="date"],
+  .form-group input[type="datetime-local"],
+  .form-group input[type="time"] {
+    color: #6b7280 !important;
+  }
+
+  .form-group input[type="date"]:valid,
+  .form-group input[type="datetime-local"]:valid,
+  .form-group input[type="time"]:valid {
+    color: #f3f4f6 !important;
+  }
+
+  /* Button styles */
+  button,
+  .button {
+    @apply bg-purple-600 text-white border-none px-6 py-3 rounded-lg cursor-pointer;
+    @apply font-semibold text-base no-underline inline-block;
+    @apply transition-all duration-200;
+    @apply hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-600/50;
+    @apply active:scale-95;
+  }
+
+  button:disabled {
+    @apply bg-gray-700 cursor-not-allowed opacity-50;
+    @apply hover:bg-gray-700 hover:shadow-none;
+  }
+
+  button.secondary,
+  .button.secondary {
+    @apply bg-[#1a1a2e] border border-[#2d2d44] text-gray-300;
+    @apply hover:bg-[#252538] hover:border-purple-600/50 hover:shadow-none;
+  }
+
+  /* Error and success messages */
+  .error {
+    @apply text-red-400 px-4 py-3 my-4 bg-red-950/30 border border-red-900/50 rounded-lg;
+    @apply backdrop-blur-sm;
+  }
+
+  .success {
+    @apply text-emerald-400 px-4 py-3 my-4 bg-emerald-950/30 border border-emerald-900/50 rounded-lg;
+    @apply backdrop-blur-sm;
+  }
+
+  /* Header row */
+  .header-row {
+    @apply flex justify-between items-center mb-6 flex-wrap gap-3;
+  }
+
+  /* Event list */
+  .event-list {
+    @apply grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .event-item {
+    @apply bg-[#1a1a2e] border border-[#2d2d44] p-6 rounded-xl;
+    @apply transition-all duration-300;
+    @apply hover:border-purple-600/50 hover:shadow-xl hover:shadow-purple-900/20;
+    @apply hover:-translate-y-1;
+  }
+
+  .event-item h3 {
+    @apply mb-3;
+  }
+
+  .event-item h3 a {
+    @apply text-white no-underline font-semibold;
+    @apply hover:text-purple-400 transition-colors;
+  }
+
+  .event-item p {
+    @apply text-gray-400 text-sm mb-2;
+  }
+
+  .event-item p strong {
+    @apply text-gray-300;
+  }
+
+  /* Tabs */
+  .tabs {
+    @apply flex gap-2 border-b border-[#2d2d44] mb-6 overflow-x-auto;
+  }
+
+  .tabs button {
+    @apply bg-transparent text-gray-400 border-none px-6 py-3 cursor-pointer;
+    @apply border-b-2 border-transparent -mb-[2px] font-medium;
+    @apply transition-all duration-200 whitespace-nowrap;
+    @apply hover:text-gray-200 hover:bg-[#252538]/50;
+  }
+
+  .tabs button.active {
+    @apply border-purple-500 text-purple-400;
+  }
+
+  /* Tables */
+  table {
+    @apply w-full border-collapse mt-4 bg-[#1a1a2e] rounded-lg overflow-hidden;
+  }
+
+  table th,
+  table td {
+    @apply px-6 py-4 text-left border-b border-[#2d2d44];
+  }
+
+  table th {
+    @apply bg-[#252538] font-semibold text-gray-300 text-sm uppercase tracking-wide;
+  }
+
+  table td {
+    @apply text-gray-400;
+  }
+
+  table tbody tr {
+    @apply transition-colors hover:bg-[#252538]/50;
+  }
+
+  /* Status badges */
+  .status {
+    @apply px-3 py-1 rounded-full text-xs font-semibold inline-block;
+  }
+
+  .status.pending {
+    @apply bg-amber-500/20 text-amber-400 border border-amber-500/30;
+  }
+
+  .status.accepted {
+    @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  }
+
+  .status.declined {
+    @apply bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+
+  /* Button group */
+  .button-group {
+    @apply flex gap-2 mt-4 flex-wrap;
+  }
+
+  /* Poll styles */
+  .poll-item {
+    @apply bg-[#1a1a2e] border border-[#2d2d44] p-6 rounded-xl mb-4;
+    @apply transition-all duration-300;
+  }
+
+  .poll-options {
+    @apply my-4 space-y-2;
+  }
+
+  .poll-option {
+    @apply flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg;
+    @apply transition-all duration-200;
+    @apply hover:bg-[#252538] border border-transparent hover:border-purple-600/30;
+  }
+
+  .poll-option input {
+    @apply w-auto cursor-pointer;
+  }
+
+  .poll-option label {
+    @apply cursor-pointer text-gray-300;
+  }
+
+  /* Poll results */
+  .result-item {
+    @apply mb-4;
+  }
+
+  .result-label {
+    @apply mb-2 font-semibold text-gray-200;
+  }
+
+  .result-bar {
+    @apply bg-[#252538] h-8 rounded-lg overflow-hidden mb-2;
+  }
+
+  .result-fill {
+    @apply bg-gradient-to-r from-purple-600 to-purple-500 h-full;
+    @apply transition-all duration-500 ease-out;
+    @apply shadow-lg shadow-purple-600/30;
+  }
+
+  .result-count {
+    @apply text-sm text-gray-400;
+  }
+
+  /* Participant list */
+  .participant-list h2 {
+    @apply mb-4;
+  }
+
+  /* Loading states */
+  .loading {
+    @apply text-gray-400 animate-pulse;
+  }
+}
+

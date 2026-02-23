@@ -1,0 +1,46 @@
+@startuml HiveUsecases
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor User
+actor Teilnehmer
+
+
+rectangle "Webservice" {
+    usecase "Event Erstellen" as UC1
+    usecase "Event-Details verwalten (Ort, Zeit, Teilnehmer, ...)" as UC2
+    usecase "Teilnehmer Einladen" as UC3
+    usecase "Einladung Annehmen/Absagen" as UC4
+    usecase "Custom Fields hinzufügen" as UC6
+    usecase "Begleitperson Hinzufügen" as UC7
+
+    usecase "Zusätzliche Informationen Hinzufügen (Allergien, Checklisten, ...)" as UC9
+    usecase "Abstimmungen erstellen" as UC10
+    usecase "Kommentarfunktion (Optional)" as UC11
+    usecase "Dokumente hochladen (Optional)" as UC12
+    usecase "Reaktionen hinzufügen (Optional)" as UC13
+    usecase "Bilder teilen (Optional)" as UC14
+}
+
+User --> UC1
+User --> UC6
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+
+UC1 ..> UC2
+UC2 ..> UC9
+UC2 ..> UC3
+UC4 ..> UC9
+
+UC3 --> Teilnehmer
+Teilnehmer --> UC4
+Teilnehmer --> UC7
+Teilnehmer --> UC13
+Teilnehmer --> UC14
+
+@enduml
