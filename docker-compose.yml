@@ -1,0 +1,72 @@
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hive}
+      POSTGRES_USER: ${POSTGRES_USER:-hive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hive}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hive} -d ${POSTGRES_DB:-hive}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Django Backend
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./Backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override DB settings for Docker networking
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-hive.settings.dev}
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_NAME: ${POSTGRES_DB:-hive}
+      DJANGO_DB_USER: ${POSTGRES_USER:-hive}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-hive}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      CORS_ALLOW_ALL_ORIGINS: ${CORS_ALLOW_ALL_ORIGINS:-True}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./Backend:/app
+      - backend_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # React Frontend (Vite dev server)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./Frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ""
+      VITE_DEV_PROXY_TARGET: "http://backend:8000"
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./Frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_media:
+  frontend_node_modules:

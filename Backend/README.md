@@ -158,3 +158,51 @@ Not implemented in MVP:
 - payments/booking
 
 These can be added as separate apps or bounded API modules later.
+
+## Docker
+
+The entire stack (PostgreSQL + Django backend + React frontend) can be started with a single command using Docker Compose from the **repo root** (parent of `Backend/` and `Frontend/`).
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2+
+
+### Quick Start
+
+```bash
+# 1. Create .env from the example (adjust secrets for production)
+cp .env.example .env
+
+# 2. Build and start all services
+docker compose up --build
+
+# 3. Run database migrations (in a separate terminal)
+docker compose run --rm backend python manage.py migrate
+
+# 4. (Optional) Create a superuser
+docker compose run --rm backend python manage.py createsuperuser
+```
+
+The app is now running at:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000/api/
+- **Django Admin**: http://localhost:8000/admin/
+
+### Stopping
+
+```bash
+docker compose down            # stop containers
+docker compose down -v         # stop + remove volumes (deletes DB data!)
+```
+
+### Architecture Notes
+
+| Service    | Image               | Port | Description                        |
+|------------|----------------------|------|------------------------------------|
+| `db`       | `postgres:16-alpine` | 5432 | PostgreSQL with named volume       |
+| `backend`  | Custom (Python 3.12) | 8000 | Django dev server                  |
+| `frontend` | Custom (Node 22)     | 5173 | Vite dev server with proxy to API  |
+
+- The Vite dev server proxies `/api/*` and `/media/*` to the backend container — **no CORS configuration needed**.
+- The backend connects to PostgreSQL via the `db` service name (set automatically in `docker-compose.yml`).
+- Source directories are bind-mounted for hot-reload in both frontend and backend.
