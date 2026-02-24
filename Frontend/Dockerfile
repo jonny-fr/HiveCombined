@@ -1,5 +1,8 @@
 FROM node:22-alpine
 
+# Install CA certificate support
+RUN apk add --no-cache ca-certificates
+
 WORKDIR /app
 
 # Copy package files first for Docker layer caching

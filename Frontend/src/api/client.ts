@@ -2,7 +2,10 @@ import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import type { User } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+// When served through a reverse proxy (Nginx), use relative URLs (empty string)
+// so the browser sends requests to the same origin.
+// Only set VITE_API_BASE_URL when running the frontend standalone without a proxy.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 // Access token stored in memory
 let accessToken: string | null = null;

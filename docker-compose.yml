@@ -1,5 +1,17 @@
 services:
   # ---------------------------------------------------------------------------
+  # Certificate Init Container (generates self-signed CA + server cert)
+  # Runs once, then exits. Other services wait via depends_on.
+  # ---------------------------------------------------------------------------
+  cert-init:
+    image: alpine/openssl:latest
+    volumes:
+      - certs:/certs
+      - ./certs/generate.sh:/generate.sh:ro
+    entrypoint: ["/bin/sh", "/generate.sh"]
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
   # PostgreSQL Database
   # ---------------------------------------------------------------------------
   db:
@@ -11,8 +23,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hive}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${DB_PORT:-5432}:5432"
+    # DB port NOT exposed externally (accessible only within Docker network)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hive} -d ${POSTGRES_DB:-hive}"]
       interval: 5s
@@ -37,16 +48,22 @@ services:
       DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-hive}
       DJANGO_DB_HOST: db
       DJANGO_DB_PORT: "5432"
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,proxy}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-https://localhost,https://127.0.0.1}
       CORS_ALLOW_ALL_ORIGINS: ${CORS_ALLOW_ALL_ORIGINS:-True}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      # SSL trust
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+    # Port NOT exposed externally – accessed only via proxy
     volumes:
       - ./Backend:/app
       - backend_media:/app/media
+      - certs:/certs:ro
     depends_on:
       db:
         condition: service_healthy
+      cert-init:
+        condition: service_completed_successfully
 
   # ---------------------------------------------------------------------------
   # React Frontend (Vite dev server)
@@ -58,15 +75,40 @@ services:
     environment:
       VITE_API_BASE_URL: ""
       VITE_DEV_PROXY_TARGET: "http://backend:8000"
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      NODE_EXTRA_CA_CERTS: "/certs/ca.crt"
+    # Port NOT exposed externally – accessed only via proxy
     volumes:
       - ./Frontend:/app
       - frontend_node_modules:/app/node_modules
+      - certs:/certs:ro
     depends_on:
       - backend
+      - cert-init
+
+  # ---------------------------------------------------------------------------
+  # Nginx HTTPS Reverse Proxy (TLS termination)
+  # ---------------------------------------------------------------------------
+  proxy:
+    build:
+      context: ./proxy
+    restart: unless-stopped
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - frontend
+      - cert-init
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
   backend_media:
   frontend_node_modules:
+  certs:

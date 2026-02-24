@@ -6,13 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies required by Pillow and psycopg
+# Install system dependencies required by Pillow, psycopg, and CA cert management
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        gcc \
        libjpeg62-turbo-dev \
        zlib1g-dev \
        libpq-dev \
+       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies first (Docker layer caching)
