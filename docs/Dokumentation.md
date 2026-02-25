@@ -185,19 +185,18 @@ Eine verteilte Architektur wie bei Microservices oder SOA würde zusätzliche
 Komplexität einführen, die für unseren Funktionsumfang nicht notwendig ist: Service-Kommunikation, mehrere Deployments, verteilte Fehlerbilder, mehr Monitoring-Aufwand und schwerere Konsistenzfragen. Für die gewählte Zielgruppe und die erwarteten Lastprofile ist diese Komplexität im MVP nicht gerechtfertigt.
 
 ---
-## Technologie-Stack / Komponenten (Auswahl und Begründung – inkl. Alternativen)
+## Technologie-Stack und Komponenten
 ### Backend: Django + Django REST Framework
 Für das Backend wurde Django mit Django REST Framework gewählt. Ausschlaggebend
 waren vor allem Geschwindigkeit und Stabilität im Projektzeitraum: Django liefert mit ORM,
 Migrationen, klarer Projektstruktur und bewährtem Ökosystem viele Grundlagen, die man
-sonst selbst bauen müsste. DRF ergänzt dies um etablierte Patterns für Serialisierung,
+sonst selbst implementieren müsste. DRF ergänzt dies um etablierte Patterns für Serialisierung,
 Validierung und Berechtigungen. Für unseren Use Case ist das besonders passend, weil wir
 mehrere zusammenhängende Domänenobjekte mit Beziehungen modellieren und
 konsistent absichern müssen.
-Flask oder ein sehr minimalistisches Framework wären grundsätzlich möglich, würden aber
-im Projektzeitraum mehr Eigenbau bedeuten (Struktur, Auth-Integration, konsistente API￾Konventionen, Dokumentation/Schema-Erzeugung, Permissions-Patterns). Für unsere
-Ressourcen wäre das Risiko höher, dass am Ende ein laufendes Projekt geliefert wird, aber
-Struktur und Qualität leiden.
+
+Flask oder ein sehr minimalistisches Framework wären grundsätzlich möglich, würden aber im Projektzeitraum mehr Eigenbau bedeuten (Struktur, Auth-Integration, konsistente API-Konventionen, Dokumentation/Schema-Erzeugung, Permissions-Patterns). Für unsere Ressourcen wäre das Risiko höher, dass am Ende ein laufendes Projekt geliefert wird, aber Struktur und Qualität leiden.
+
 ### Authentifizierung: JWT (tokenbasiert)
 Wir nutzen eine tokenbasierte Authentifizierung (JWT), weil sie gut zu einem Web-Client
 passt und API-Requests ohne serverseitige Sessionverwaltung ermöglicht. Fachlich ist das
@@ -205,25 +204,24 @@ entscheidend, weil Hive private Eventdaten verarbeitet: Der Webservice muss sich
 unterscheiden können, wer welche Daten sehen und ändern darf. Tokenbasierte Auth
 macht diese Identitätsprüfung pro Request möglich und unterstützt damit auch spätere
 Skalierung (mehrere API-Instanzen sind leichter betreibbar, weil der Server weniger
-Session-State halten muss).
+Session-State halten muss). Zusätzlich wird zeitbasierte Sicherheit gewährleistet, indem JWT-tokens regelmäßig rotiert und veraltete Token geblacklistet werden.
+
 ### API-Dokumentation: OpenAPI/Swagger
 Für die Schnittstellendokumentation verwenden wir eine OpenAPI-basierte Beschreibung
-(inkl. interaktiver Dokumentation). Das ist im Team und bei der Live-Demo besonders
+(inkl. interaktiver Dokumentation). Das ist im Team besonders
 hilfreich, weil Endpunkte, Request/Response-Modelle und Validierungsregeln
 nachvollziehbar bleiben. Gleichzeitig reduziert es Missverständnisse zwischen Frontend
 und Backend, weil die Spezifikation nicht nur „Text“, sondern maschinenlesbar ist.
+
 ### Datenhaltung: einfache Entwicklung, robustes Zielbild
-Für eine schnelle lokale Entwicklung ist eine leichtgewichtige Datenhaltung sinnvoll, um
+Für eine schnelle lokale Entwicklung ist eine gut implementierte Datenhaltung sinnvoll, um
 Setup-Zeit zu minimieren. Für ein produktionsnäheres Zielbild ist eine robuste Datenbank
-wichtig, um Constraints, Performance und parallele Zugriffe zuverlässig zu unterstützen.
-Zusätzlich benötigt Hive flexible Strukturen (Custom Fields), was eine saubere serverseitige
-Validierung und eine geeignete Persistenzstrategie erfordert.
+wichtig, um Constraints, Performance und parallele Zugriffe zuverlässig zu unterstützen. Hierfür haben wir Django ORM verwendet, da es sinnvoll implemenitert ist. Modelle müssen nur einmal festgelegt werden und können daraufhin sinnvoll validiert werden. Außerdem ist der OOP aufbau einfach verständlich und eignet sich in Kombination mit Python besonders gut.
+
+
 ### Qualitätssicherung: Tests & CI/CD-Idee
-Qualitätssicherung erfolgt über Tests und systematische Checks. Ziel ist, Kernflüsse wie
-Authentifizierung, Eventverwaltung und Einladungs-/Teilnahmeprozesse sowie wichtige
-Berechtigungsregeln reproduzierbar zu prüfen. Als CI/CD-Idee bietet sich eine GitLab￾Pipeline an, die Tests automatisch ausführt und Container-Images baut. Der Hauptnutzen
-liegt hier in Reproduzierbarkeit: Die lauffähige Abgabe soll nicht von lokalen Maschinen
-abhängen, sondern als definierte, testbare Build-Kette entstehen.
+Qualitätssicherung erfolgt über Tests und systematische Checks. Ziel ist, Kernflüsse wie Authentifizierung, Eventverwaltung und Einladungs-/Teilnahmeprozesse sowie wichtige Berechtigungsregeln reproduzierbar zu prüfen. Als CI/CD-Idee bietet sich eine GitHub-Pipeline an, die Tests automatisch ausführt und Container-Images baut. Der Hauptnutzen liegt hier in der Fehlerfrüherkennung. Fehler sollen durch fehlschlagende Tests gefunden werden, bevor sie in Main gemerged werden.
+
 ---
 ## Verteilung/Deployment-Ansatz (3-Tier, Docker – inkl. Cloud/On-Prem Einordnung)
 Hive lässt sich als 3-Tier-Webanwendung beschreiben: Ein Web-Client stellt die Oberfläche
@@ -246,6 +244,7 @@ Schnittstellen und Implementierungsqualität statt auf cloud-spezifische Konfigu
 Gleichzeitig schließt die gewählte Struktur eine spätere Migration nicht aus, da
 standardisierte Komponenten (HTTP-API, Container, Datenbank) typische Voraussetzungen
 für Cloud-Deployments sind.
+
 ---
 ## Implementierung Prototyp
 Der Prototyp setzt den minimalen Funktionsumfang der Plattform um und bildet die
@@ -268,6 +267,7 @@ typisches Risiko in Einladungsprozessen reduziert wird. Zusätzlich wird ein ein
 Fehlerformat zentral durchgesetzt, was sowohl die Fehlersuche im Backend als auch die
 Fehlerbehandlung im Client vereinfacht. Insgesamt zeigt der Prototyp damit, wie nicht￾funktionale Anforderungen wie Sicherheit und Wartbarkeit in konkrete technische
 Maßnahmen und eine saubere Implementierungsstruktur übersetzt werden.
+
 ---
 ## Entwicklungsumgebung, technischer Rahmen und Repository-/Betriebsstruktur
 Die Entwicklungsumgebung ist auf eine schnelle und reproduzierbare Inbetriebnahme
@@ -298,6 +298,7 @@ Datenbank und weitere unterstützende Komponenten ergänzt werden, um das 3-Tier
 „Packaging“-Werkzeug, sondern beeinflusst auch die Art der Konfiguration, die Trennung
 von Komponenten und die praktische Startbarkeit der Anwendung für Demo und
 Bewertung.
+
 ---
 ## API-Spezifikation (Webservice-Methode, Endpunkt, Beschreibung)
 Die API ist ressourcenorientiert aufgebaut und stellt die zentralen Objekte der Domäne über
@@ -331,6 +332,7 @@ Einladung sicherzustellen, dass der eingeloggte Nutzer zur Einladung passt. Dies
 Zusammenspiel zeigt, dass die API-Spezifikation nicht nur beschreibt, welche Funktionen
 existieren, sondern auch, unter welchen Voraussetzungen und Rollen diese Funktionen
 ausgeführt werden dürfen.
+
 ---
 ## Umsetzung der Implementierung (Initialisierung, Prototyping, Dockerisierung,
 Integration, Validierung)
@@ -362,7 +364,8 @@ reproduzierbaren Umgebung lauffähig bereitzustellen. Dadurch wird sichergestell
 das System nicht nur auf einzelnen Entwicklerrechnern funktioniert, sondern als definierte
 Instanz startbar ist. Abhängig vom Ausbaustand umfasst das Setup neben dem API-Dienst
 auch eine Datenbank sowie optional weitere unterstützende Komponenten. Abschließend
-wird der Prototyp durch automatisierte Tests, Framework-Checks und eine manuelle End￾to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live￾Demo zuverlässig demonstrierbar sind.
+wird der Prototyp durch automatisierte Tests, Framework-Checks und eine manuelle End￾to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live-Demo zuverlässig demonstrierbar sind.
+
 ---
 ## Validierung & Qualitätssicherung (Testverfahren & -ergebnisse)
 Die Qualitätssicherung in Hive stützt sich auf automatisierte Tests und systematische
@@ -387,6 +390,7 @@ Konkrete Testergebnisse und Kennzahlen hängen vom aktuellen Ausbaustand der Tes
 Angabe, welche Kernflüsse automatisiert abgedeckt sind und wie die Tests in eine CI/CD￾Pipeline eingebunden werden. Unabhängig davon ist das Vorgehen so angelegt, dass
 Testläufe und Checks reproduzierbar durchgeführt und damit als belastbarer Nachweis für
 die Funktionsfähigkeit und Stabilität des Webservices dokumentiert werden können.
+
 ---
 ## Fazit & Ausblick
 Hive zeigt, dass sich die Organisation kleiner Events als klar strukturierter Webservice
