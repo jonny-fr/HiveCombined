@@ -175,24 +175,15 @@ auf komplexen Enterprise-Integrationen.
 Wir haben einen Monolithen gewählt, weil er in unserem Kontext die beste Balance aus
 Entwicklungsaufwand, Zuverlässigkeit und Nachvollziehbarkeit bietet. Die wichtigsten
 Gründe sind:
-• Ressourcen & Zeitrahmen: Ein kleines Team kann ein System schneller stabil liefern,
-wenn Deployment, Logging und Debugging nicht über mehrere Services verteilt
-werden müssen.
-• Konsistenz der Daten: Eventplanung ist stark zustandsorientiert (Einladung ↔
-Teilnahme ↔ Beiträge ↔ Abstimmungen). Eine zentrale Datenhaltung vereinfacht
-Konsistenz und Berechtigungen.
-• Sicherheit & Permissions: Querschnittsthemen wie Authentifizierung und
-Zugriffskontrolle lassen sich zentral und einheitlich umsetzen.
-Warum nicht Microservices oder SOA? Eine verteilte Architektur würde zusätzliche
-Komplexität einführen, die für unseren Funktionsumfang nicht notwendig ist: Service￾Kommunikation, mehrere Deployments, verteilte Fehlerbilder, mehr Monitoring-Aufwand
-und schwerere Konsistenzfragen. Für die gewählte Zielgruppe und die erwarteten
-Lastprofile ist diese Komplexität im MVP nicht gerechtfertigt.
-### Evolvierbarkeit
-Trotz Monolith bleibt Hive evolvierbar: Durch die fachliche Modularisierung im Code können
-spätere Erweiterungen (z. B. Medien/Uploads oder Benachrichtigungen) zunächst als neue
-Module ergänzt und – falls es nötig werden sollte – später auch als eigenständige
-Komponenten ausgelagert werden. Diese „evolutionäre“ Sicht passt gut zu einem Projekt,
-das zunächst einen klaren Kern stabil liefern muss.
+- Ressourcen & Zeitrahmen: Ein kleines Team kann ein System schneller stabil liefern, wenn Deployment, Logging und Debugging nicht über mehrere Services verteilt werden müssen.
+- Konsistenz der Daten: Eventplanung ist stark zustandsorientiert (Einladung, Teilnahme, Beiträge und Abstimmungen). Eine zentrale Datenhaltung vereinfacht Konsistenz und Berechtigungen.
+- Sicherheit & Permissions: Querschnittsthemen wie Authentifizierung und Zugriffskontrolle lassen sich zentral und einheitlich umsetzen.
+
+Ein Monolith kann bei stark wachsendem Funktionsumfang unübersichtlicher werden, weil Änderungen und Deployments das gesamte Backend betreffen und eine gezielte Skalierung einzelner Teilbereiche weniger fein möglich ist. In unserem Projekt ist dieser Nachteil jedoch kaum relevant, da der Funktionsumfang klar abgegrenzt ist und die erwartete Nutzung (kleine Freundesgruppen) keine hohe Systemlast erzeugt. Trotz Monolith bleibt Hive evolvierbar: Durch die fachliche Modularisierung im Code können spätere Erweiterungen (z. B. Medien/Uploads oder Benachrichtigungen) als eigenständige Komponenten hinzugefügt werden.
+
+Eine verteilte Architektur wie bei Microservices oder SOA würde zusätzliche
+Komplexität einführen, die für unseren Funktionsumfang nicht notwendig ist: Service-Kommunikation, mehrere Deployments, verteilte Fehlerbilder, mehr Monitoring-Aufwand und schwerere Konsistenzfragen. Für die gewählte Zielgruppe und die erwarteten Lastprofile ist diese Komplexität im MVP nicht gerechtfertigt.
+
 ---
 ## Technologie-Stack / Komponenten (Auswahl und Begründung – inkl. Alternativen)
 ### Backend: Django + Django REST Framework
