@@ -247,26 +247,7 @@ für Cloud-Deployments sind.
 
 ---
 ## Implementierung Prototyp
-Der Prototyp setzt den minimalen Funktionsumfang der Plattform um und bildet die
-zentralen Domänen der Eventplanung ab. Im Fokus stehen das Erstellen und Verwalten von
-Events, das Einladen von Personen sowie die Rückmeldung zur Teilnahme. Ergänzend
-werden typische Planungsfunktionen unterstützt, die in kleinen Gruppen häufig benötigt
-werden, etwa eine Bringliste, flexibel definierbare Zusatzfelder und Abstimmungen. Die
-Implementierung ist so strukturiert, dass fachliche Bereiche in getrennten Modulen
-gekapselt sind, während Querschnittsthemen wie Konfiguration, Routing und
-Fehlerbehandlung zentral gebündelt werden. Dadurch bleibt die Codebasis auch bei
-Erweiterungen übersichtlich und nachvollziehbar. Gleichzeitig wird damit sichtbar, dass die
-im Entwurf beschriebene Architektur nicht nur theoretisch formuliert ist, sondern sich in
-der Projektstruktur und in den Implementierungsentscheidungen konkret wiederfindet.
-Sicherheitsrelevante Aspekte werden im Prototyp konsistent berücksichtigt und bewusst
-serverseitig umgesetzt. Zugriffe auf Ressourcen werden objektbasiert geprüft, sodass
-bestimmte Aktionen ausschließlich der organisierenden Person vorbehalten sind, während
-Teilnehmende nur ihre eigenen Daten bearbeiten und im vorgesehenen Rahmen
-interagieren können. Einladungs-Tokens werden nicht im Klartext persistiert, wodurch ein
-typisches Risiko in Einladungsprozessen reduziert wird. Zusätzlich wird ein einheitliches
-Fehlerformat zentral durchgesetzt, was sowohl die Fehlersuche im Backend als auch die
-Fehlerbehandlung im Client vereinfacht. Insgesamt zeigt der Prototyp damit, wie nicht￾funktionale Anforderungen wie Sicherheit und Wartbarkeit in konkrete technische
-Maßnahmen und eine saubere Implementierungsstruktur übersetzt werden.
+Der Prototyp setzt den minimalen Funktionsumfang der Plattform um und bildet die zentralen Domänen der Eventplanung ab. Im Fokus stehen das Erstellen und Verwalten von Events, das Einladen von Personen sowie die Rückmeldung zur Teilnahme. Ergänzend werden typische Planungsfunktionen unterstützt, die in kleinen Gruppen häufig benötigt werden, etwa eine Bringliste, flexibel definierbare Zusatzfelder und Abstimmungen. Die Implementierung ist konsequent nach der im Entwurf beschriebene Architektur umgesetzt. Somit zeigt sich, dass diese nicht nur theoretisch formuliert sind, sondern auch in der Praxis konkret anwenden lassen. Sicherheitsrelevante Aspekte werden im Prototyp konsistent berücksichtigt und bewusst serverseitig umgesetzt. Zugriffe auf Ressourcen werden objektbasiert geprüft, sodass bestimmte Aktionen ausschließlich der organisierenden Person vorbehalten sind, während Teilnehmende nur ihre eigenen Daten bearbeiten und im vorgesehenen Rahmen interagieren können. Einladungs-Tokens werden nicht im Klartext persistiert, wodurch ein typisches Risiko in Einladungsprozessen reduziert wird. Zusätzlich wird ein einheitliches Fehlerformat zentral durchgesetzt, was sowohl die Fehlersuche im Backend als auch die Fehlerbehandlung im Client vereinfacht. Insgesamt zeigt der Prototyp damit, wie nicht-funktionale Anforderungen wie Sicherheit und Wartbarkeit in konkrete technische Maßnahmen und eine saubere Implementierungsstruktur übersetzt wurden.
 
 ---
 ## Entwicklungsumgebung, technischer Rahmen und Repository-/Betriebsstruktur
