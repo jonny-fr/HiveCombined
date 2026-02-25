@@ -135,44 +135,29 @@ unterstützen es ebenfalls, weil sie eine saubere Trennung von Komponenten und i
 Bedarfsfall eine horizontale Skalierung der API-Instanzen ermöglichen.
 ---
 ## Architektur, Konzeption & Design
-Hive ist als Webservice konzipiert, der die zentralen Domänenobjekte der Eventplanung (z.
-B. Event, Einladung, Teilnahme und Abstimmung) verwaltet und über eine HTTP-basierte
-API bereitstellt. Grundidee ist, dass der verbindliche und aktuelle Planungsstand nicht in
-verteilten Chatverläufen oder auf einzelnen Endgeräten entsteht, sondern zentral im
-Backend geführt wird. Dadurch bleiben Zustände wie Zu- und Absagen, Begleitpersonen
-sowie Abstimmungsergebnisse konsistent, nachvollziehbar und auch bei häufigen
-Änderungen jederzeit eindeutig abrufbar. Als grundlegende Struktur wurde ein modularer
-Monolith gewählt. Das System ist also als ein deploybares Backend umgesetzt, wird aber
-im Code fachlich in getrennte Bereiche gegliedert (z. B. Accounts/Authentifizierung, Events,
-Einladungen, Polls). Diese Entscheidung passt zu unserem Use Case (kleine Gruppen,
-klarer Funktionsumfang) und zum Zeitrahmen eines Semesterprojekts: Wir erreichen damit
-schnelle Umsetzung, einfache Inbetriebnahme und eine konsistente Datenhaltung, ohne
-die zusätzliche Komplexität verteilter Systeme zu erzeugen. Gleichzeitig unterstützt die
-modulare Aufteilung die Wartbarkeit, weil neue Funktionen später in klaren Modulen
-ergänzt werden können.
+Hive ist als Webservice konzipiert und als grundlegende Struktur wurde ein modularer Monolith gewählt. Allgemein ist das Projekt in zwei Teile aufgeteilt: Frontend und Backend. Das Frontend kommuniziert mit dem Backend über eine HTTPS-basierte API (über einen internen Proxy). Dadurch können Domänenobjekte der Eventplanung (z.B. Event, Einladung, Teilnahme und Abstimmung) verwaltet werden. Für diese Architektur haben wir uns aufgrund unserer Usecases und der Rahmenbedingungen eines Semesterprojekts entschieden.
+Während der Entwicklung haben wir Frontend und Backend in zwei Github Repos getrennt von einander entwickelt. Anschließend haben wir es in ein gemeinsames Repo zusammengeführt und mit Docker Compose containerisiert. Das System ist also als ein deploybarer Fullstack-Container swarm umgesetzt. Das Backend wird im Code architekturtechnisch in getrennte Bereiche (Django Apps) gegliedert (z. B. Accounts/Authentifizierung, Events, Einladungen, Polls). Wir erreichen damit schnelle Umsetzung, einfache Inbetriebnahme und eine konsistente Datenhaltung, ohne die zusätzliche Komplexität verteilter Systeme zu erzeugen. Gleichzeitig unterstützt die modulare Aufteilung die Wartbarkeit, weil neue Funktionen später in klaren Modulen ergänzt werden können.
 
 Der Request-Flow folgt einem schichtenähnlichen Aufbau, wie er in Django/DRF üblich ist:
-Eingehende Requests werden über das zentrale Routing den zuständigen API￾Komponenten zugeordnet. Eingaben werden serverseitig validiert, fachliche Regeln geprüft
-und danach persistiert oder ausgelesen. Diese serverseitige Durchsetzung ist bewusst
+Eingehende Requests werden über das zentrale Routing den zuständigen API-Komponenten zugeordnet. Eingaben werden server und clientseitig validiert, fachliche Regeln geprüft und danach persistiert oder ausgelesen. Diese retundant wirkende Umsetzung ist bewusst
 gewählt, weil Frontend-Validierung zwar die Bedienbarkeit verbessert, aber technisch
 umgangen werden kann. Gerade bei gruppenbasierten Funktionen wie Einladungen,
 Teilnahme und Abstimmungen ist das wichtig: Der Webservice muss zuverlässig prüfen, ob
 ein Nutzer überhaupt zum Event gehört und ob die übermittelten Daten fachlich gültig sind
 (z. B. dass bei einer Abstimmung nur zulässige Optionen verwendet werden). So bleiben
 Datenqualität und Zugriffsschutz stabil, unabhängig vom Client.
+
+Auch die Persistenz ist Teil des Architekturentwurfs: Für schnelle Entwicklung ist eine
+unkomplizierte Datenhaltung sinnvoll, während für ein produktionsnahes Zielbild eine
+robuste Datenbankarchitektur benötigt wird, um Constraints, parallele Zugriffe und Indizes
+zuverlässig zu unterstützen. 
+
 Ein weiterer zentraler Baustein ist ein konsistentes Fehler- und Responseverhalten. Die API
 nutzt ein einheitliches Fehlerformat, das zentral durchgesetzt wird. Das reduziert
 Sonderfälle in der Client-Implementierung, erleichtert das Testen und ist gleichzeitig
 sicherheitsrelevant, weil interne Details kontrolliert behandelt werden und nicht
 unabsichtlich nach außen gelangen.
 
-Auch die Persistenz ist Teil des Architekturentwurfs: Für schnelle Entwicklung ist eine
-unkomplizierte Datenhaltung sinnvoll, während für ein produktionsnahes Zielbild eine
-robuste Datenbankarchitektur benötigt wird, um Constraints, parallele Zugriffe und Indizes
-zuverlässig zu unterstützen. Zusätzlich berücksichtigt Hive flexible Planungsanforderungen
-über Custom Fields. Diese lassen sich sinnvoll über strukturierte, flexible Werte abbilden –
-entscheidend ist dabei, dass die Validierung weiterhin serverseitig erfolgt, damit flexible
-Daten nicht zu inkonsistenten Zuständen führen.
 ---
 ## Beschreibung der gewählten Architektur & Schnittstellen (REST, Monolith – inkl. Alternativen)
 ### Gewählt: REST-basierter Webservice
