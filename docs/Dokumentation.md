@@ -231,12 +231,12 @@ Verantwortlichkeiten klar hält und eine realistische Betriebsform widerspiegelt
 kleiner Nutzerzahl ist es vorteilhaft, wenn UI und Datenhaltung nicht „vermengt“ werden, da
 sich Änderungen und Betrieb dadurch einfacher gestalten lassen.
 Für die Abgabe und den Betrieb wird Docker genutzt, weil es eine reproduzierbare
-Umgebung schafft. Das ist im Hochschulkontext besonders wichtig: Eine lauffähige Instanz
-soll unabhängig vom Endgerät startbar sein (Live-Demo, Abgabe, Bewertung). Docker
+Umgebung schafft. Eine lauffähige Instanz soll unabhängig vom Endgerät startbar sein (Live-Demo, Abgabe, Bewertung). Docker
 unterstützt außerdem saubere Konfigurationsprinzipien über Umgebungsvariablen und
 erleichtert es, bei Bedarf weitere Komponenten einzubinden (z. B. Datenbankcontainer; in
 einem weiter ausgebauten Setup auch ergänzende Infrastruktur wie Caching, Background
 Jobs oder Storage).
+
 Cloud-Betrieb wäre grundsätzlich möglich, da ein containerisierter Webservice gut in
 typische Cloud-Modelle passt. Für unser Projekt ist jedoch ein cloud-neutraler Ansatz
 sinnvoller: Er vermeidet Providerabhängigkeiten und hält den Fokus auf Architektur,
