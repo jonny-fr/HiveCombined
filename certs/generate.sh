@@ -10,7 +10,7 @@
 #   ca.key / ca.crt         – Certificate Authority (install on clients)
 #   server.key / server.crt – Server certificate (used by Nginx proxy)
 # =============================================================================
-set -e
+set -e # stop on first error
 
 CERT_DIR="/certs"
 CA_KEY="$CERT_DIR/ca.key"

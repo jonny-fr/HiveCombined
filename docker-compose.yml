@@ -8,7 +8,7 @@ services:
     volumes:
       - certs:/certs
       - ./certs/generate.sh:/generate.sh:ro
-    entrypoint: ["/bin/sh", "/generate.sh"]
+    entrypoint: ["/bin/sh", "-c", "tr -d '\\r' < /generate.sh | /bin/sh"]
     restart: "no"
 
   # ---------------------------------------------------------------------------
