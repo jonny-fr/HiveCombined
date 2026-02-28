@@ -412,34 +412,17 @@ HiveCombined/                          ← Monorepo-Wurzel
     └── usecases.puml
 ```
 
-Die Entwicklungsumgebung ist auf eine schnelle und reproduzierbare Inbetriebnahme
-ausgelegt. Lokale Konfigurationen und sensible Werte werden über Umgebungsvariablen
-gesteuert. Für die Entwicklung können diese in einer lokalen Environment-Datei hinterlegt
-werden. Dieses Vorgehen ist organisatorisch sinnvoll, weil Teammitglieder unabhängig
-voneinander arbeiten können. Gleichzeitig wird damit der Übergang in eine
-produktionsnahe Umgebung erleichtert, da containerisierte Deployments und CI/CD-Pipelines ebenfalls typischerweise auf environmentbasierte Konfigurationen setzen.
-Kommuniziert wird über HTTP mit JSON als Payload, da dies dem Standard für REST-APIs
-entspricht und von Web-Clients direkt unterstützt wird. Die Laufzeitumgebung basiert auf
-Python; als Framework kommen Django und Django REST Framework zum Einsatz. Die
-Auswahl zielt auf ein stabiles, gut dokumentiertes Ökosystem, das im Projektkontext eine
-klare Struktur, bewährte Best Practices und eine nachvollziehbare Implementierung
-ermöglicht.
-Die Repository-Struktur folgt dem modularen Ansatz des Backends. Fachliche Bereiche
-sind in getrennten Modulen organisiert, beispielsweise für Authentifizierung/Accounts,
-Eventverwaltung, Einladungen und Abstimmungen. Querschnittsthemen wie zentrale
-Einstellungen, Routing und Fehlerbehandlung sind gebündelt, sodass sie nicht mehrfach
-implementiert werden müssen. Ergänzend existieren Testbereiche für Integration und
-domänenspezifische Tests. Diese Struktur unterstützt Wartbarkeit, weil
-Verantwortlichkeiten im Code klar bleiben, und erleichtert spätere Erweiterungen, da neue
-Funktionen als eigenständige Module ergänzt werden können, ohne den Kern unnötig zu
-verändern.
-Als Ziel für die Betriebsumgebung wird eine containerisierte Auslieferung über Docker
-verfolgt, um die Reproduzierbarkeit der Abgabe sicherzustellen. Je nach Ausbaustand der
-Dockerisierung kann das Setup aus einem reinen API-Container bestehen oder um eine
-Datenbank und weitere unterstützende Komponenten ergänzt werden, um das 3-Tier￾Zielbild (Client–API–Datenbank) konsistent abzubilden. Docker ist damit nicht nur ein
-„Packaging“-Werkzeug, sondern beeinflusst auch die Art der Konfiguration, die Trennung
-von Komponenten und die praktische Startbarkeit der Anwendung für Demo und
-Bewertung.
+Die Struktur macht deutlich, dass fachliche Bereiche konsequent getrennt sind: Jede
+Django-App (`accounts`, `events`, `invitations`, `polls`) trägt ihre eigenen Modelle,
+Serializer, Views, Services und Migrationen. Querschnittsthemen wie zentrales Routing,
+einheitliches Fehlerformat und umgebungsabhängige Einstellungen sind im `hive/`-Kernpaket
+gebündelt, sodass sie nicht in einzelnen Domänen redundant implementiert werden müssen.
+Im Frontend spiegelt die Aufteilung in `api/`, `context/`, `pages/` und `components/` eine
+klare Schichttrennung wider: API-Kommunikation, globaler Zustand, seitenspezifische
+Logik und wiederverwendbare UI-Elemente bleiben voneinander entkoppelt. Diese Struktur
+erleichtert Wartung und Erweiterung, weil Änderungen an einer Schicht die anderen nicht
+zwingend berühren.
+
 
 ---
 ## API-Spezifikation (Webservice-Methode, Endpunkt, Beschreibung)
