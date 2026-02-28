@@ -259,12 +259,165 @@ Der Prototyp setzt den minimalen Funktionsumfang der Plattform um und bildet die
 
 ---
 ## Entwicklungsumgebung, technischer Rahmen und Repository-/Betriebsstruktur
+
+### Entwicklungsumgebung & technischer Rahmen
+
 Die Entwicklungsumgebung ist auf eine schnelle und reproduzierbare Inbetriebnahme
 ausgelegt. Lokale Konfigurationen und sensible Werte werden über Umgebungsvariablen
 gesteuert. Für die Entwicklung können diese in einer lokalen Environment-Datei hinterlegt
 werden. Dieses Vorgehen ist organisatorisch sinnvoll, weil Teammitglieder unabhängig
 voneinander arbeiten können. Gleichzeitig wird damit der Übergang in eine
-produktionsnahe Umgebung erleichtert, da containerisierte Deployments und CI/CD￾Pipelines ebenfalls typischerweise auf environmentbasierte Konfigurationen setzen.
+produktionsnahe Umgebung erleichtert, da containerisierte Deployments und CI/CD-Pipelines ebenfalls typischerweise auf environmentbasierte Konfigurationen setzen.
+Kommuniziert wird über HTTP mit JSON als Payload, da dies dem Standard für REST-APIs
+entspricht und von Web-Clients direkt unterstützt wird. Die Laufzeitumgebung basiert auf
+Python; als Framework kommen Django und Django REST Framework zum Einsatz. Die
+Auswahl zielt auf ein stabiles, gut dokumentiertes Ökosystem, das im Projektkontext eine
+klare Struktur, bewährte Best Practices und eine nachvollziehbare Implementierung
+ermöglicht.
+
+### Repository-Struktur
+
+Das Projekt ist als Monorepo organisiert, das alle drei Hauptkomponenten – Backend,
+Frontend und Proxy – gemeinsam versioniert und über eine einzelne `docker-compose.yml`
+orchestriert. Diese Entscheidung erleichtert die gemeinsame Inbetriebnahme, weil alle
+Teile des Systems aus einem einzigen Verzeichnis heraus gestartet werden können, ohne
+dass Abhängigkeiten zwischen separaten Repositories koordiniert werden müssen. Innerhalb
+des Monorepos ist jede Komponente klar abgegrenzt: Das Backend gliedert sich nach
+fachlichen Domänen (Django Apps), das Frontend nach technischen Schichten (api, context,
+pages, components), und der Proxy kapselt die Netzwerkkonfiguration vollständig.
+Die folgende Übersicht zeigt den vollständigen Aufbau des Repositories mit allen relevanten
+Dateien und Verzeichnissen:
+
+```
+HiveCombined/                          ← Monorepo-Wurzel
+├── .env                               ← Lokale Umgebungsvariablen (nicht versioniert)
+├── .env.example                       ← Vorlage für Umgebungsvariablen
+├── docker-compose.yml                 ← Orchestrierung aller Container (3-Tier)
+│
+├── Backend/                           ← Django-Backend (API-Tier)
+│   ├── Dockerfile                     ← Container-Image des Backends
+│   ├── entrypoint.sh                  ← Startskript (Migrationen, Server)
+│   ├── manage.py                      ← Django-Management-CLI
+│   ├── requirements.txt               ← Python-Abhängigkeiten
+│   ├── pytest.ini                     ← Testkonfiguration
+│   ├── schema.yaml                    ← OpenAPI-Spezifikation (generiert)
+│   │
+│   ├── hive/                          ← Django-Projektkern / Querschnitt
+│   │   ├── settings/
+│   │   │   ├── base.py                ← Gemeinsame Einstellungen
+│   │   │   ├── dev.py                 ← Entwicklungsumgebung
+│   │   │   └── prod.py                ← Produktionsumgebung
+│   │   ├── api/
+│   │   │   └── exceptions.py          ← Zentrales, einheitliches Fehlerformat
+│   │   ├── urls.py                    ← Zentrales URL-Routing
+│   │   ├── asgi.py / wsgi.py          ← Server-Einstiegspunkte
+│   │   └── __init__.py
+│   │
+│   ├── accounts/                      ← Domäne: Authentifizierung & Nutzer
+│   │   ├── models.py                  ← Nutzermodell
+│   │   ├── serializers.py             ← Ein-/Ausgabe-Validierung
+│   │   ├── views.py                   ← API-Endpunkte (Registrierung, Token)
+│   │   ├── urls.py
+│   │   ├── tests.py
+│   │   └── migrations/
+│   │
+│   ├── events/                        ← Domäne: Events & Planung
+│   │   ├── models.py                  ← Event, CustomField, BringList, …
+│   │   ├── serializers.py
+│   │   ├── views.py                   ← CRUD-Endpunkte für Events
+│   │   ├── permissions.py             ← Objektbasierte Zugriffskontrolle
+│   │   ├── services.py                ← Fachliche Geschäftslogik
+│   │   ├── urls.py
+│   │   ├── tests.py
+│   │   └── migrations/
+│   │
+│   ├── invitations/                   ← Domäne: Einladungen & RSVP
+│   │   ├── models.py                  ← Invitation (Token gehasht), Participation
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   ├── urls.py
+│   │   ├── tests.py
+│   │   └── migrations/
+│   │
+│   ├── polls/                         ← Domäne: Abstimmungen
+│   │   ├── models.py                  ← Poll, PollOption, Vote
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   ├── urls.py
+│   │   ├── tests.py
+│   │   └── migrations/
+│   │
+│   ├── tests/
+│   │   └── test_hive_api.py           ← Integrationstest (End-to-End-Flows)
+│   └── media/                         ← Hochgeladene Mediendateien (Laufzeit)
+│
+├── Frontend/                          ← React-Frontend (Client-Tier)
+│   ├── Dockerfile
+│   ├── entrypoint.sh
+│   ├── vite.config.ts                 ← Build-Werkzeug (Vite)
+│   ├── package.json
+│   ├── tailwind.config.js             ← CSS-Framework
+│   └── src/
+│       ├── main.tsx / App.tsx         ← Einstiegspunkt & Routing
+│       ├── constants.ts               ← Zentrale Konfigurationswerte
+│       ├── api/                       ← API-Client-Schicht
+│       │   ├── client.ts              ← Axios-Instanz + JWT-Handling
+│       │   ├── auth.ts
+│       │   ├── events.ts
+│       │   ├── invitations.ts
+│       │   ├── participation.ts
+│       │   ├── polls.ts
+│       │   ├── contributions.ts
+│       │   └── customFields.ts
+│       ├── context/
+│       │   ├── AuthContext.tsx        ← Globaler Authentifizierungszustand
+│       │   └── PrivateRoute.tsx       ← Zugriffsschutz für Routen
+│       ├── pages/                     ← Seitenkomponenten (je Route eine Datei)
+│       │   ├── LoginPage.tsx
+│       │   ├── RegisterPage.tsx
+│       │   ├── EventListPage.tsx
+│       │   ├── EventDetailPage.tsx
+│       │   ├── CreateEventPage.tsx
+│       │   ├── EditEventPage.tsx
+│       │   └── InviteRespondPage.tsx
+│       ├── components/                ← Wiederverwendbare UI-Komponenten
+│       │   ├── Navbar.tsx
+│       │   ├── ParticipantList.tsx
+│       │   ├── InviteForm.tsx
+│       │   ├── PollList.tsx / PollResults.tsx
+│       │   ├── ContributionList.tsx
+│       │   ├── CustomFieldList.tsx
+│       │   ├── MyParticipation.tsx
+│       │   ├── Pagination.tsx
+│       │   └── ErrorBoundary.tsx
+│       ├── types/
+│       │   └── index.ts               ← Gemeinsame TypeScript-Typdefinitionen
+│       └── assets/                    ← Statische Ressourcen (Bilder, Icons)
+│
+├── proxy/                             ← Nginx-Reverse-Proxy (Netzwerk-Tier)
+│   ├── Dockerfile
+│   ├── nginx.conf                     ← Basiseinstellungen
+│   ├── default.conf.template          ← Virtuelle Hosts (TLS, Routing)
+│   └── entrypoint.sh
+│
+├── certs/
+│   └── generate.sh                    ← Skript zur Erzeugung von TLS-Zertifikaten
+│
+└── docs/                              ← Projektdokumentation & Diagramme
+    ├── Dokumentation.md
+    ├── HiveUsecases.png
+    ├── RequestFlow.png / .puml
+    └── usecases.puml
+```
+
+Die Entwicklungsumgebung ist auf eine schnelle und reproduzierbare Inbetriebnahme
+ausgelegt. Lokale Konfigurationen und sensible Werte werden über Umgebungsvariablen
+gesteuert. Für die Entwicklung können diese in einer lokalen Environment-Datei hinterlegt
+werden. Dieses Vorgehen ist organisatorisch sinnvoll, weil Teammitglieder unabhängig
+voneinander arbeiten können. Gleichzeitig wird damit der Übergang in eine
+produktionsnahe Umgebung erleichtert, da containerisierte Deployments und CI/CD-Pipelines ebenfalls typischerweise auf environmentbasierte Konfigurationen setzen.
 Kommuniziert wird über HTTP mit JSON als Payload, da dies dem Standard für REST-APIs
 entspricht und von Web-Clients direkt unterstützt wird. Die Laufzeitumgebung basiert auf
 Python; als Framework kommen Django und Django REST Framework zum Einsatz. Die
