@@ -68,13 +68,12 @@ Nutzungsziel.
 Ziel von Hive ist es, die Planung kleiner Events zu vereinfachen und alle relevanten
 Informationen an einem Ort zu bündeln. Nutzer sollen Freunde zu Events einladen und die
 Organisation gemeinsam durchführen können. Im Kern soll die Plattform ermöglichen, dass
-die wichtigsten Fragen schnell beantwortbar sind: 
-- Wo und wann findet das Event statt? 
-- Wer kann teilnehmen? 
-- Gibt es Begleitpersonen? 
-- Welche Allergien oder Hinweise sind zu
-beachten? 
-- Wer bringt was mit? 
+die wichtigsten Fragen schnell beantwortbar sind:
+- Wo und wann findet das Event statt?
+- Wer kann teilnehmen?
+- Gibt es Begleitpersonen?
+- Welche Allergien oder Hinweise sind zu beachten?
+- Wer bringt was mit?
 
 Zusätzlich soll Hive flexibel genug sein, um sich an
 unterschiedliche Eventtypen anzupassen, ohne jedes Mal neue feste Felder einbauen zu
@@ -213,7 +212,6 @@ und Backend, weil die Spezifikation nicht nur „Text“, sondern maschinenlesba
 ### Datenhaltung: SQLite (Dev) und PostgreSQL (Produktion)
 Für die lokale Entwicklung wird SQLite genutzt, da es keinerlei Setup erfordert und direkt mit Django funktioniert. Im Docker-basierten Betrieb wird PostgreSQL 16 als dedizierter Datenbankdienst verwendet, der zuverlässige Constraints, parallele Zugriffe und performante Indizes unterstützt. Der Wechsel zwischen beiden Backends erfolgt ausschließlich über Umgebungsvariablen (`DJANGO_DB_ENGINE`, `DJANGO_DB_HOST` usw.) und erfordert keine Codeänderungen. Als ORM kommt Django ORM zum Einsatz: Modelle werden einmal in Python definiert, Migrationen automatisch generiert und Validierungen konsistent auf Datenbankebene durchgesetzt. Der objektorientierte Aufbau ist gut lesbar und fügt sich natürlich in das übrige Django-Ökosystem ein.
 
-
 ### Qualitätssicherung: Tests und CI/CD
 Für automatisierte Tests werden `pytest` und `pytest-django` eingesetzt. Diese ermöglichen isolierte, datenbankgestützte Tests ohne zusätzlichen Server-Overhead. Die Testkonfiguration liegt in `pytest.ini` und lässt sich lokal wie auch in einer Pipeline ohne Anpassungen ausführen. Eine CI/CD-Pipeline (z. B. GitHub Actions) ist konzeptionell vorgesehen, wurde im Rahmen des Projekts jedoch nicht implementiert. Der Hauptnutzen läge in der automatischen Ausführung der Testsuite bei jedem Merge-Request, um Regressionen frühzeitig zu erkennen.
 
@@ -226,7 +224,7 @@ Verantwortlichkeiten klar hält und eine realistische Betriebsform widerspiegelt
 kleiner Nutzerzahl ist es vorteilhaft, wenn UI und Datenhaltung nicht „vermengt“ werden, da
 sich Änderungen und Betrieb dadurch einfacher gestalten lassen.
 Für die Abgabe und den Betrieb wird Docker genutzt, weil es eine reproduzierbare
-Umgebung schafft. Eine lauffähige Instanz soll unabhängig vom Endgerät startbar sein (Live-Demo, Abgabe, Bewertung). Docker
+Umgebung schafft. Eine lauffähige Instanz ist unabhängig vom Endgerät startbar (Live-Demo, Abgabe, Bewertung). Docker
 unterstützt außerdem saubere Konfigurationsprinzipien über Umgebungsvariablen und
 erleichtert es, bei Bedarf weitere Komponenten einzubinden (z. B. Datenbankcontainer; in
 einem weiter ausgebauten Setup auch ergänzende Infrastruktur wie Caching, Background
@@ -483,7 +481,6 @@ Die Qualitätssicherung in Hive stützt sich auf automatisierte Integrationstest
 - **Einladungen**: Token-Ausstellung, Annahme, Ablehnung, Ablauf, Zugriffskontrolle (falscher Nutzer)
 - **Teilnahme**: Selbst-Update inkl. Beiträge und Custom-Field-Antworten
 - **Abstimmungen**: Voting-Constraints (Single-/Multiple-Choice), Ergebnisabfrage, Duplikat-Schutz
-- **Optionale Funktionen**: Kommentare (inkl. Replies), Reaktionen (Toggle), Dokument-Upload, Galerie-Upload – noch nicht unterstützt
 
 Ergänzend wird über Framework-Checks (Django-System-Checks) sichergestellt, dass Konfiguration und grundlegende Deploy-Fähigkeit korrekt sind. Diese Kombination ist im Webservice-Kontext besonders wichtig, da Fehler häufig nicht ausschließlich aus der fachlichen Logik entstehen, sondern durch Konfiguration verursacht werden können, etwa durch CORS-Einstellungen, Sicherheitsheader oder Token-Konfigurationen.
 
