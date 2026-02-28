@@ -1,0 +1,29 @@
+@startuml Request Flow
+actor User
+participant Frontend
+participant Proxy
+participant "Django URL Router" as Router
+participant "ViewSet/API View" as View
+participant "Serializer" as Serializer
+participant "Model Manager" as Model
+participant "Database" as DB
+
+User -> Frontend: User Input
+Frontend -> Proxy: HTTPS Request
+Proxy -> Router: Route to App
+Router -> View: Handle Request
+View -> Serializer: Validate Input
+alt Client-side Valid
+    Serializer -> View: Valid Data
+else Invalid
+    View -> Frontend: Error Response
+end
+View -> Model: Business Rules Check
+Model -> DB: Persist/Read
+DB -> Model: Data
+Model -> View: Processed Data
+View -> Serializer: Serialize Output
+Serializer -> Frontend: JSON Response
+Frontend -> User: Display
+@enduml
+

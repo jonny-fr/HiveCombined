@@ -1,16 +1,18 @@
 # Hive – Projektdokumentation (Konstruktionsentwurf & Prototyp)
 ## Inhaltsverzeichnis:
+
 <!-- TOC -->
+* [Hive – Projektdokumentation (Konstruktionsentwurf & Prototyp)](#hive--projektdokumentation-konstruktionsentwurf--prototyp)
+  * [Inhaltsverzeichnis:](#inhaltsverzeichnis)
   * [Beschreibung des Problems und Kontext](#beschreibung-des-problems-und-kontext)
   * [Zielgruppe/-setzung](#zielgruppe-setzung)
   * [Anforderungen & fachlicher Kontext - Use Cases](#anforderungen--fachlicher-kontext---use-cases)
-  * [Anforderungen (funktional und nicht-funktional, z.B. Performance, Sicherheit,](#anforderungen-funktional-und-nicht-funktional-zb-performance-sicherheit)
-  * [Architektur (Konzeption & Design – grundlegende Struktur und Zusammenspiel der](#architektur-konzeption--design--grundlegende-struktur-und-zusammenspiel-der)
+  * [Funktionale und nicht-funktional Anforderungen](#funktionale-und-nicht-funktional-anforderungen)
+  * [Architektur, Konzeption & Design](#architektur-konzeption--design)
   * [Beschreibung der gewählten Architektur & Schnittstellen (REST, Monolith – inkl. Alternativen)](#beschreibung-der-gewählten-architektur--schnittstellen-rest-monolith--inkl-alternativen)
     * [Gewählt: REST-basierter Webservice](#gewählt-rest-basierter-webservice)
     * [Gewählt: modularer Monolith](#gewählt-modularer-monolith)
-    * [Evolvierbarkeit](#evolvierbarkeit)
-  * [Technologie-Stack / Komponenten (Auswahl und Begründung – inkl. Alternativen)](#technologie-stack--komponenten-auswahl-und-begründung--inkl-alternativen)
+  * [Technologie-Stack und Komponenten](#technologie-stack-und-komponenten)
     * [Backend: Django + Django REST Framework](#backend-django--django-rest-framework)
     * [Authentifizierung: JWT (tokenbasiert)](#authentifizierung-jwt-tokenbasiert)
     * [API-Dokumentation: OpenAPI/Swagger](#api-dokumentation-openapiswagger)
@@ -24,6 +26,7 @@
   * [Validierung & Qualitätssicherung (Testverfahren & -ergebnisse)](#validierung--qualitätssicherung-testverfahren---ergebnisse)
   * [Fazit & Ausblick](#fazit--ausblick)
 <!-- TOC -->
+
 ---
 ## Beschreibung des Problems und Kontext
 Im Alltag werden für die Organisation kleiner Events häufig Gruppen-Chats genutzt. Das ist
@@ -48,6 +51,7 @@ validieren. Als Webanwendung ist Hive plattformunabhängig im Browser nutzbar, s
 am Desktop als auch auf dem Smartphone. So bleibt der aktuelle Stand der Planung
 jederzeit nachvollziehbar und unabhängig davon, auf welchem Gerät oder über welchen
 Kommunikationskanal die Gruppe gerade interagiert.
+
 ---
 ## Zielgruppe/-setzung
 Die primäre Zielgruppe von Hive sind kleinere Freundesgruppen, die regelmäßig gemeinsame Aktivitäten organisieren, etwa Geburtstage,
@@ -80,6 +84,7 @@ Webservice konzentriert sich entsprechend auf die zentrale Organisation: Events 
 Freunde einladen und Teilnahme bestätigen. Weitere Funktionen sind als Erweiterungen
 vorgesehen und können schrittweise ergänzt werden, ohne die Kernfunktionalität zu
 destabilisieren.
+
 ---
 ## Anforderungen & fachlicher Kontext - Use Cases
 
@@ -133,10 +138,13 @@ nicht verbaut wird. Tokenbasierte Authentifizierung unterstützt dies, weil Requ
 weitgehend stateless verarbeitet werden können. Containerisierte Deployments
 unterstützen es ebenfalls, weil sie eine saubere Trennung von Komponenten und im
 Bedarfsfall eine horizontale Skalierung der API-Instanzen ermöglichen.
+
 ---
 ## Architektur, Konzeption & Design
 Hive ist als Webservice konzipiert und als grundlegende Struktur wurde ein modularer Monolith gewählt. Allgemein ist das Projekt in zwei Teile aufgeteilt: Frontend und Backend. Das Frontend kommuniziert mit dem Backend über eine HTTPS-basierte API (über einen internen Proxy). Dadurch können Domänenobjekte der Eventplanung (z.B. Event, Einladung, Teilnahme und Abstimmung) verwaltet werden. Für diese Architektur haben wir uns aufgrund unserer Usecases und der Rahmenbedingungen eines Semesterprojekts entschieden.
 Während der Entwicklung haben wir Frontend und Backend in zwei Github Repos getrennt von einander entwickelt. Anschließend haben wir es in ein gemeinsames Repo zusammengeführt und mit Docker Compose containerisiert. Das System ist also als ein deploybarer Fullstack-Container swarm umgesetzt. Das Backend wird im Code architekturtechnisch in getrennte Bereiche (Django Apps) gegliedert (z. B. Accounts/Authentifizierung, Events, Einladungen, Polls). Wir erreichen damit schnelle Umsetzung, einfache Inbetriebnahme und eine konsistente Datenhaltung, ohne die zusätzliche Komplexität verteilter Systeme zu erzeugen. Gleichzeitig unterstützt die modulare Aufteilung die Wartbarkeit, weil neue Funktionen später in klaren Modulen ergänzt werden können.
+
+![Hive Request Flow](RequestFlow.png)
 
 Der Request-Flow folgt einem schichtenähnlichen Aufbau, wie er in Django/DRF üblich ist:
 Eingehende Requests werden über das zentrale Routing den zuständigen API-Komponenten zugeordnet. Eingaben werden server und clientseitig validiert, fachliche Regeln geprüft und danach persistiert oder ausgelesen. Diese retundant wirkende Umsetzung ist bewusst
@@ -161,7 +169,7 @@ unabsichtlich nach außen gelangen.
 ---
 ## Beschreibung der gewählten Architektur & Schnittstellen (REST, Monolith – inkl. Alternativen)
 ### Gewählt: REST-basierter Webservice
-Als Schnittstellenstil wurde REST über HTTP/JSON gewählt. Das passt sehr gut zu unserem
+Als Schnittstellenstil wurde REST über HTTPS/JSON gewählt. Das passt sehr gut zu unserem
 Anwendungsfall, weil ein Web-Client die Daten direkt konsumieren kann und weil REST im
 Web-Kontext etabliert, leichtgewichtig und gut testbar ist. Für ein Semesterprojekt ist
 außerdem wichtig, dass Schnittstellen schnell nachvollziehbar und stabil dokumentierbar
