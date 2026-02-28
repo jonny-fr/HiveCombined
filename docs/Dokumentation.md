@@ -4,31 +4,31 @@
 <!-- TOC -->
 * [Hive – Projektdokumentation (Konstruktionsentwurf & Prototyp)](#hive--projektdokumentation-konstruktionsentwurf--prototyp)
   * [Inhaltsverzeichnis:](#inhaltsverzeichnis)
-  * [Beschreibung des Problems und Kontext](#beschreibung-des-problems-und-kontext)
-  * [Zielgruppe/-setzung](#zielgruppe-setzung)
-  * [Anforderungen & fachlicher Kontext - Use Cases](#anforderungen--fachlicher-kontext---use-cases)
-  * [Funktionale und nicht-funktional Anforderungen](#funktionale-und-nicht-funktional-anforderungen)
-  * [Architektur, Konzeption & Design](#architektur-konzeption--design)
-  * [Beschreibung der gewählten Architektur & Schnittstellen (REST, Monolith – inkl. Alternativen)](#beschreibung-der-gewählten-architektur--schnittstellen-rest-monolith--inkl-alternativen)
-    * [Gewählt: REST-basierter Webservice](#gewählt-rest-basierter-webservice)
-    * [Gewählt: modularer Monolith](#gewählt-modularer-monolith)
-  * [Technologie-Stack und Komponenten](#technologie-stack-und-komponenten)
-    * [Backend: Django + Django REST Framework](#backend-django--django-rest-framework)
-    * [Authentifizierung: JWT (tokenbasiert)](#authentifizierung-jwt-tokenbasiert)
-    * [API-Dokumentation: OpenAPI/Swagger](#api-dokumentation-openapiswagger)
-    * [Datenhaltung: einfache Entwicklung, robustes Zielbild](#datenhaltung-einfache-entwicklung-robustes-zielbild)
-    * [Qualitätssicherung: Tests & CI/CD-Idee](#qualitätssicherung-tests--cicd-idee)
-  * [Verteilung/Deployment-Ansatz (3-Tier, Docker – inkl. Cloud/On-Prem Einordnung)](#verteilungdeployment-ansatz-3-tier-docker--inkl-cloudon-prem-einordnung)
-  * [Implementierung Prototyp](#implementierung-prototyp)
-  * [Entwicklungsumgebung, technischer Rahmen und Repository-/Betriebsstruktur](#entwicklungsumgebung-technischer-rahmen-und-repository-betriebsstruktur)
-  * [API-Spezifikation (Webservice-Methode, Endpunkt, Beschreibung)](#api-spezifikation-webservice-methode-endpunkt-beschreibung)
-  * [Umsetzung der Implementierung (Initialisierung, Prototyping, Dockerisierung,](#umsetzung-der-implementierung-initialisierung-prototyping-dockerisierung)
-  * [Validierung & Qualitätssicherung (Testverfahren & -ergebnisse)](#validierung--qualitätssicherung-testverfahren---ergebnisse)
-  * [Fazit & Ausblick](#fazit--ausblick)
+  * [Problemstellung und Kontext](#problemstellung-und-kontext)
+  * [Zielgruppe und Projektziele](#zielgruppe-und-projektziele)
+  * [Fachlicher Kontext und Use Cases](#fachlicher-kontext-und-use-cases)
+  * [Funktionale und nicht-funktionale Anforderungen](#funktionale-und-nicht-funktionale-anforderungen)
+  * [Architekturüberblick](#architekturüberblick)
+  * [Gewählte Architektur und Schnittstellen](#gewählte-architektur-und-schnittstellen)
+    * [REST-basierter Webservice](#rest-basierter-webservice)
+    * [Modularer Monolith](#modularer-monolith)
+  * [Technologie-Stack](#technologie-stack)
+    * [Backend: Django und Django REST Framework](#backend-django-und-django-rest-framework)
+    * [Authentifizierung: JWT](#authentifizierung-jwt)
+    * [API-Dokumentation: OpenAPI und Swagger](#api-dokumentation-openapi-und-swagger)
+    * [Datenhaltung: Django ORM](#datenhaltung-django-orm)
+    * [Qualitätssicherung: Tests und CI/CD](#qualitätssicherung-tests-und-cicd)
+  * [Deployment-Ansatz: 3-Tier-Architektur mit Docker](#deployment-ansatz-3-tier-architektur-mit-docker)
+  * [Prototyp: Umfang und Umsetzung](#prototyp-umfang-und-umsetzung)
+  * [Entwicklungsumgebung und Repository-Struktur](#entwicklungsumgebung-und-repository-struktur)
+  * [API-Spezifikation](#api-spezifikation)
+  * [Implementierungsprozess](#implementierungsprozess)
+  * [Qualitätssicherung und Testergebnisse](#qualitätssicherung-und-testergebnisse)
+  * [Fazit und Ausblick](#fazit-und-ausblick)
 <!-- TOC -->
 
 ---
-## Beschreibung des Problems und Kontext
+## Problemstellung und Kontext
 Im Alltag werden für die Organisation kleiner Events häufig Gruppen-Chats genutzt. Das ist
 unkompliziert und schnell, führt in der Praxis jedoch immer wieder zu denselben
 Problemen: Informationen gehen im Chatverlauf unter, Absprachen werden mehrfach
@@ -53,7 +53,7 @@ jederzeit nachvollziehbar und unabhängig davon, auf welchem Gerät oder über w
 Kommunikationskanal die Gruppe gerade interagiert.
 
 ---
-## Zielgruppe/-setzung
+## Zielgruppe und Projektziele
 Die primäre Zielgruppe von Hive sind kleinere Freundesgruppen, die regelmäßig gemeinsame Aktivitäten organisieren, etwa Geburtstage,
 Spieleabende oder Grillen. In diesem Umfeld ist der Rahmen meist nicht förmlich und die
 Gruppengröße überschaubar, trotzdem besteht ein klarer Bedarf an Übersicht. Ort und Zeit
@@ -86,7 +86,7 @@ vorgesehen und können schrittweise ergänzt werden, ohne die Kernfunktionalitä
 destabilisieren.
 
 ---
-## Anforderungen & fachlicher Kontext - Use Cases
+## Fachlicher Kontext und Use Cases
 
 ![HiveUsecases](HiveUsecases.png)
 
@@ -98,7 +98,7 @@ Ein weiterer wichtiger Use Case sind Abstimmungen (UC10), die der organisierende
 
 
 ---
-## Funktionale und nicht-funktional Anforderungen
+## Funktionale und nicht-funktionale Anforderungen
 Funktional muss Hive die zentralen Prozesse der Eventplanung als Webservice abbilden.
 Dazu gehört zunächst, dass Nutzer sich registrieren und authentifizieren können.
 Authentifizierung dient dabei nicht nur dem „Login“, sondern bildet die Grundlage für die
@@ -140,7 +140,7 @@ unterstützen es ebenfalls, weil sie eine saubere Trennung von Komponenten und i
 Bedarfsfall eine horizontale Skalierung der API-Instanzen ermöglichen.
 
 ---
-## Architektur, Konzeption & Design
+## Architekturüberblick
 Hive ist als Webservice konzipiert und als grundlegende Struktur wurde ein modularer Monolith gewählt. Allgemein ist das Projekt in zwei Teile aufgeteilt: Frontend und Backend. Das Frontend kommuniziert mit dem Backend über eine HTTPS-basierte API (über einen internen Proxy). Dadurch können Domänenobjekte der Eventplanung (z.B. Event, Einladung, Teilnahme und Abstimmung) verwaltet werden. Für diese Architektur haben wir uns aufgrund unserer Usecases und der Rahmenbedingungen eines Semesterprojekts entschieden.
 Während der Entwicklung haben wir Frontend und Backend in zwei Github Repos getrennt von einander entwickelt. Anschließend haben wir es in ein gemeinsames Repo zusammengeführt und mit Docker Compose containerisiert. Das System ist also als ein deploybarer Fullstack-Container swarm umgesetzt. Das Backend wird im Code architekturtechnisch in getrennte Bereiche (Django Apps) gegliedert (z. B. Accounts/Authentifizierung, Events, Einladungen, Polls). Wir erreichen damit schnelle Umsetzung, einfache Inbetriebnahme und eine konsistente Datenhaltung, ohne die zusätzliche Komplexität verteilter Systeme zu erzeugen. Gleichzeitig unterstützt die modulare Aufteilung die Wartbarkeit, weil neue Funktionen später in klaren Modulen ergänzt werden können.
 
@@ -167,8 +167,8 @@ sicherheitsrelevant, weil interne Details kontrolliert behandelt werden und nich
 unabsichtlich nach außen gelangen.
 
 ---
-## Beschreibung der gewählten Architektur & Schnittstellen (REST, Monolith – inkl. Alternativen)
-### Gewählt: REST-basierter Webservice
+## Gewählte Architektur und Schnittstellen
+### REST-basierter Webservice
 Als Schnittstellenstil wurde REST über HTTPS/JSON gewählt. Das passt sehr gut zu unserem
 Anwendungsfall, weil ein Web-Client die Daten direkt konsumieren kann und weil REST im
 Web-Kontext etabliert, leichtgewichtig und gut testbar ist. Für ein Semesterprojekt ist
@@ -179,7 +179,7 @@ Warum nicht SOAP? SOAP würde im Vergleich einen deutlich höheren Overhead erze
 Use Case (kleine Freundesgruppen, typische Web-Client-Nutzung) keinen proportionalen
 Mehrwert. Unser Fokus liegt auf klaren Ressourcen, Zuständen und Berechtigungen, nicht
 auf komplexen Enterprise-Integrationen.
-### Gewählt: modularer Monolith
+### Modularer Monolith
 Wir haben einen Monolithen gewählt, weil er in unserem Kontext die beste Balance aus
 Entwicklungsaufwand, Zuverlässigkeit und Nachvollziehbarkeit bietet. Die wichtigsten
 Gründe sind:
@@ -193,8 +193,8 @@ Eine verteilte Architektur wie bei Microservices oder SOA würde zusätzliche
 Komplexität einführen, die für unseren Funktionsumfang nicht notwendig ist: Service-Kommunikation, mehrere Deployments, verteilte Fehlerbilder, mehr Monitoring-Aufwand und schwerere Konsistenzfragen. Für die gewählte Zielgruppe und die erwarteten Lastprofile ist diese Komplexität im MVP nicht gerechtfertigt.
 
 ---
-## Technologie-Stack und Komponenten
-### Backend: Django + Django REST Framework
+## Technologie-Stack
+### Backend: Django und Django REST Framework
 Für das Backend wurde Django mit Django REST Framework gewählt. Ausschlaggebend
 waren vor allem Geschwindigkeit und Stabilität im Projektzeitraum: Django liefert mit ORM,
 Migrationen, klarer Projektstruktur und bewährtem Ökosystem viele Grundlagen, die man
@@ -205,7 +205,7 @@ konsistent absichern müssen.
 
 Flask oder ein sehr minimalistisches Framework wären grundsätzlich möglich, würden aber im Projektzeitraum mehr Eigenbau bedeuten (Struktur, Auth-Integration, konsistente API-Konventionen, Dokumentation/Schema-Erzeugung, Permissions-Patterns). Für unsere Ressourcen wäre das Risiko höher, dass am Ende ein laufendes Projekt geliefert wird, aber Struktur und Qualität leiden.
 
-### Authentifizierung: JWT (tokenbasiert)
+### Authentifizierung: JWT
 Wir nutzen eine tokenbasierte Authentifizierung (JWT), weil sie gut zu einem Web-Client
 passt und API-Requests ohne serverseitige Sessionverwaltung ermöglicht. Fachlich ist das
 entscheidend, weil Hive private Eventdaten verarbeitet: Der Webservice muss sicher
@@ -214,24 +214,24 @@ macht diese Identitätsprüfung pro Request möglich und unterstützt damit auch
 Skalierung (mehrere API-Instanzen sind leichter betreibbar, weil der Server weniger
 Session-State halten muss). Zusätzlich wird zeitbasierte Sicherheit gewährleistet, indem JWT-tokens regelmäßig rotiert und veraltete Token geblacklistet werden.
 
-### API-Dokumentation: OpenAPI/Swagger
+### API-Dokumentation: OpenAPI und Swagger
 Für die Schnittstellendokumentation verwenden wir eine OpenAPI-basierte Beschreibung
 (inkl. interaktiver Dokumentation). Das ist im Team besonders
 hilfreich, weil Endpunkte, Request/Response-Modelle und Validierungsregeln
 nachvollziehbar bleiben. Gleichzeitig reduziert es Missverständnisse zwischen Frontend
 und Backend, weil die Spezifikation nicht nur „Text“, sondern maschinenlesbar ist.
 
-### Datenhaltung: einfache Entwicklung, robustes Zielbild
+### Datenhaltung: Django ORM
 Für eine schnelle lokale Entwicklung ist eine gut implementierte Datenhaltung sinnvoll, um
 Setup-Zeit zu minimieren. Für ein produktionsnäheres Zielbild ist eine robuste Datenbank
 wichtig, um Constraints, Performance und parallele Zugriffe zuverlässig zu unterstützen. Hierfür haben wir Django ORM verwendet, da es sinnvoll implemenitert ist. Modelle müssen nur einmal festgelegt werden und können daraufhin sinnvoll validiert werden. Außerdem ist der OOP aufbau einfach verständlich und eignet sich in Kombination mit Python besonders gut.
 
 
-### Qualitätssicherung: Tests & CI/CD-Idee
+### Qualitätssicherung: Tests und CI/CD
 Qualitätssicherung erfolgt über Tests und systematische Checks. Ziel ist, Kernflüsse wie Authentifizierung, Eventverwaltung und Einladungs-/Teilnahmeprozesse sowie wichtige Berechtigungsregeln reproduzierbar zu prüfen. Als CI/CD-Idee bietet sich eine GitHub-Pipeline an, die Tests automatisch ausführt und Container-Images baut. Der Hauptnutzen liegt hier in der Fehlerfrüherkennung. Fehler sollen durch fehlschlagende Tests gefunden werden, bevor sie in Main gemerged werden.
 
 ---
-## Verteilung/Deployment-Ansatz (3-Tier, Docker – inkl. Cloud/On-Prem Einordnung)
+## Deployment-Ansatz: 3-Tier-Architektur mit Docker
 Hive lässt sich als 3-Tier-Webanwendung beschreiben: Ein Web-Client stellt die Oberfläche
 bereit, ein API-Backend kapselt Geschäftslogik und Zugriffskontrolle, und eine Datenbank
 persistiert den Zustand. Diese Trennung ist für unser Projekt sinnvoll, weil sie
@@ -254,13 +254,13 @@ standardisierte Komponenten (HTTP-API, Container, Datenbank) typische Voraussetz
 für Cloud-Deployments sind.
 
 ---
-## Implementierung Prototyp
+## Prototyp: Umfang und Umsetzung
 Der Prototyp setzt den minimalen Funktionsumfang der Plattform um und bildet die zentralen Domänen der Eventplanung ab. Im Fokus stehen das Erstellen und Verwalten von Events, das Einladen von Personen sowie die Rückmeldung zur Teilnahme. Ergänzend werden typische Planungsfunktionen unterstützt, die in kleinen Gruppen häufig benötigt werden, etwa eine Bringliste, flexibel definierbare Zusatzfelder und Abstimmungen. Die Implementierung ist konsequent nach der im Entwurf beschriebene Architektur umgesetzt. Somit zeigt sich, dass diese nicht nur theoretisch formuliert sind, sondern auch in der Praxis konkret anwenden lassen. Sicherheitsrelevante Aspekte werden im Prototyp konsistent berücksichtigt und bewusst serverseitig umgesetzt. Zugriffe auf Ressourcen werden objektbasiert geprüft, sodass bestimmte Aktionen ausschließlich der organisierenden Person vorbehalten sind, während Teilnehmende nur ihre eigenen Daten bearbeiten und im vorgesehenen Rahmen interagieren können. Einladungs-Tokens werden nicht im Klartext persistiert, wodurch ein typisches Risiko in Einladungsprozessen reduziert wird. Zusätzlich wird ein einheitliches Fehlerformat zentral durchgesetzt, was sowohl die Fehlersuche im Backend als auch die Fehlerbehandlung im Client vereinfacht. Insgesamt zeigt der Prototyp damit, wie nicht-funktionale Anforderungen wie Sicherheit und Wartbarkeit in konkrete technische Maßnahmen und eine saubere Implementierungsstruktur übersetzt wurden.
 
 ---
-## Entwicklungsumgebung, technischer Rahmen und Repository-/Betriebsstruktur
+## Entwicklungsumgebung und Repository-Struktur
 
-### Entwicklungsumgebung & technischer Rahmen
+### Entwicklungsumgebung und technischer Rahmen
 
 Die Entwicklungsumgebung ist auf eine schnelle und reproduzierbare Inbetriebnahme
 ausgelegt. Lokale Konfigurationen und sensible Werte werden über Umgebungsvariablen
@@ -425,7 +425,7 @@ zwingend berühren.
 
 
 ---
-## API-Spezifikation (Webservice-Methode, Endpunkt, Beschreibung)
+## API-Spezifikation
 Die API ist ressourcenorientiert aufgebaut und stellt die zentralen Objekte der Domäne über
 standardisierte HTTP-Semantik bereit. Funktional gliedert sich die Schnittstelle in mehrere
 Bereiche: einen Authentifizierungsbereich für Registrierung und Tokenverwaltung, einen
@@ -459,8 +459,7 @@ existieren, sondern auch, unter welchen Voraussetzungen und Rollen diese Funktio
 ausgeführt werden dürfen.
 
 ---
-## Umsetzung der Implementierung (Initialisierung, Prototyping, Dockerisierung,
-Integration, Validierung)
+## Implementierungsprozess
 Die Implementierung wurde schrittweise und nachvollziehbar aufgebaut. Zu Beginn stand
 die Initialisierung des Projekts: Es wurde das Grundgerüst des Backends erstellt, die
 fachlichen Module angelegt und die Basiskonfiguration so eingerichtet, dass eine klare
@@ -492,7 +491,7 @@ auch eine Datenbank sowie optional weitere unterstützende Komponenten. Abschlie
 wird der Prototyp durch automatisierte Tests, Framework-Checks und eine manuelle End￾to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live-Demo zuverlässig demonstrierbar sind.
 
 ---
-## Validierung & Qualitätssicherung (Testverfahren & -ergebnisse)
+## Qualitätssicherung und Testergebnisse
 Die Qualitätssicherung in Hive stützt sich auf automatisierte Tests und systematische
 Prüfmechanismen. Automatisierte Tests zielen insbesondere auf die zentralen End-to-End￾Flüsse ab, die für die Nutzbarkeit des Systems entscheidend sind: von der Authentifizierung
 über das Erstellen eines Events und das Einladen von Personen bis hin zur
@@ -517,7 +516,7 @@ Testläufe und Checks reproduzierbar durchgeführt und damit als belastbarer Nac
 die Funktionsfähigkeit und Stabilität des Webservices dokumentiert werden können.
 
 ---
-## Fazit & Ausblick
+## Fazit und Ausblick
 Hive zeigt, dass sich die Organisation kleiner Events als klar strukturierter Webservice
 umsetzen lässt, der die typischen Schwächen einer Planung über Messenger-Gruppen
 reduziert. Durch die zentrale Abbildung von Zuständen entsteht eine verlässliche Grundlage
@@ -538,7 +537,7 @@ zählen insbesondere Kommentare, Reaktionen sowie der Upload und das Teilen von
 Dokumenten oder Bildern im Kontext eines Events. Diese Erweiterungen lassen sich bei
 sauberer Beibehaltung der Domänenstruktur als zusätzliche Module ergänzen, ohne den
 Kernfluss (Event → Einladung → Teilnahme) zu gefährden. Ebenso kann das Deployment
-schrittweise produktionsnäher ausgebaut werden, etwa durch eine vollständige Docker￾Compose-Umgebung mit separater Datenbank, ergänzenden Diensten für
+schrittweise produktionsnäher ausgebaut werden, etwa durch eine vollständige Docker-Compose-Umgebung mit separater Datenbank, ergänzenden Diensten für
 Hintergrundverarbeitung oder einem externen Objekt-Storage. Sollte Hive in einem
 späteren Szenario deutlich wachsen, wären weitergehende Architekturentwicklungen
 denkbar, beispielsweise die Auslagerung einzelner, stark belasteter oder fachlich klar
