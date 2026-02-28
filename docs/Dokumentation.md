@@ -14,9 +14,10 @@
     * [Modularer Monolith](#modularer-monolith)
   * [Technologie-Stack](#technologie-stack)
     * [Backend: Django und Django REST Framework](#backend-django-und-django-rest-framework)
+    * [Frontend: React, TypeScript und Vite](#frontend-react-typescript-und-vite)
     * [Authentifizierung: JWT](#authentifizierung-jwt)
     * [API-Dokumentation: OpenAPI und Swagger](#api-dokumentation-openapi-und-swagger)
-    * [Datenhaltung: Django ORM](#datenhaltung-django-orm)
+    * [Datenhaltung: SQLite (Dev) und PostgreSQL (Produktion)](#datenhaltung-sqlite-dev-und-postgresql-produktion)
     * [Qualitätssicherung: Tests und CI/CD](#qualitätssicherung-tests-und-cicd)
   * [Deployment-Ansatz: 3-Tier-Architektur mit Docker](#deployment-ansatz-3-tier-architektur-mit-docker)
   * [Prototyp: Umfang und Umsetzung](#prototyp-umfang-und-umsetzung)
@@ -141,30 +142,15 @@ Bedarfsfall eine horizontale Skalierung der API-Instanzen ermöglichen.
 
 ---
 ## Architekturüberblick
-Hive ist als Webservice konzipiert und als grundlegende Struktur wurde ein modularer Monolith gewählt. Allgemein ist das Projekt in zwei Teile aufgeteilt: Frontend und Backend. Das Frontend kommuniziert mit dem Backend über eine HTTPS-basierte API (über einen internen Proxy). Dadurch können Domänenobjekte der Eventplanung (z.B. Event, Einladung, Teilnahme und Abstimmung) verwaltet werden. Für diese Architektur haben wir uns aufgrund unserer Usecases und der Rahmenbedingungen eines Semesterprojekts entschieden.
-Während der Entwicklung haben wir Frontend und Backend in zwei Github Repos getrennt von einander entwickelt. Anschließend haben wir es in ein gemeinsames Repo zusammengeführt und mit Docker Compose containerisiert. Das System ist also als ein deploybarer Fullstack-Container swarm umgesetzt. Das Backend wird im Code architekturtechnisch in getrennte Bereiche (Django Apps) gegliedert (z. B. Accounts/Authentifizierung, Events, Einladungen, Polls). Wir erreichen damit schnelle Umsetzung, einfache Inbetriebnahme und eine konsistente Datenhaltung, ohne die zusätzliche Komplexität verteilter Systeme zu erzeugen. Gleichzeitig unterstützt die modulare Aufteilung die Wartbarkeit, weil neue Funktionen später in klaren Modulen ergänzt werden können.
+Hive ist als Webservice konzipiert; als grundlegende Struktur wurde ein modularer Monolith gewählt. Das Projekt gliedert sich in drei Hauptkomponenten: Frontend, Backend und einen Nginx-Reverse-Proxy. Das Frontend kommuniziert mit dem Backend ausschließlich über den Proxy per HTTPS. Dadurch können Domänenobjekte der Eventplanung (z. B. Event, Einladung, Teilnahme und Abstimmung) verwaltet werden. Für diese Architektur haben wir uns aufgrund unserer Use Cases und der Rahmenbedingungen eines Semesterprojekts entschieden.
+
+Während der Entwicklung wurden Frontend und Backend in zwei getrennten GitHub-Repositories entwickelt. Anschließend wurden beide in ein gemeinsames Monorepo zusammengeführt und mit Docker Compose als vollständiger Container-Verbund containerisiert. Das System umfasst dabei die Dienste `backend`, `frontend`, `db` (PostgreSQL), `proxy` (Nginx) sowie einen `cert-init`-Container für TLS-Zertifikate. Das Backend ist architekturtechnisch in getrennte Django-Apps gegliedert (z. B. `accounts`, `events`, `invitations`, `polls`). Damit werden schnelle Umsetzung, einfache Inbetriebnahme und konsistente Datenhaltung erreicht, ohne die zusätzliche Komplexität verteilter Systeme einzuführen. Die modulare Aufteilung unterstützt gleichzeitig die Wartbarkeit, weil neue Funktionen in klar abgegrenzten Modulen ergänzt werden können.
 
 ![Hive Request Flow](RequestFlow.png)
 
-Der Request-Flow folgt einem schichtenähnlichen Aufbau, wie er in Django/DRF üblich ist:
-Eingehende Requests werden über das zentrale Routing den zuständigen API-Komponenten zugeordnet. Eingaben werden server und clientseitig validiert, fachliche Regeln geprüft und danach persistiert oder ausgelesen. Diese retundant wirkende Umsetzung ist bewusst
-gewählt, weil Frontend-Validierung zwar die Bedienbarkeit verbessert, aber technisch
-umgangen werden kann. Gerade bei gruppenbasierten Funktionen wie Einladungen,
-Teilnahme und Abstimmungen ist das wichtig: Der Webservice muss zuverlässig prüfen, ob
-ein Nutzer überhaupt zum Event gehört und ob die übermittelten Daten fachlich gültig sind
-(z. B. dass bei einer Abstimmung nur zulässige Optionen verwendet werden). So bleiben
-Datenqualität und Zugriffsschutz stabil, unabhängig vom Client.
+Der Request-Flow folgt einem schichtenähnlichen Aufbau, wie er in Django/DRF üblich ist: Eingehende Requests werden über das zentrale Routing den zuständigen API-Komponenten zugeordnet. Eingaben werden server- und clientseitig validiert, fachliche Regeln geprüft und danach persistiert oder ausgelesen. Diese redundant wirkende Umsetzung ist bewusst gewählt, weil Frontend-Validierung zwar die Bedienbarkeit verbessert, aber technisch umgangen werden kann. Gerade bei gruppenbasierten Funktionen wie Einladungen, Teilnahme und Abstimmungen ist das wichtig: Der Webservice muss zuverlässig prüfen, ob ein Nutzer überhaupt zum Event gehört und ob die übermittelten Daten fachlich gültig sind (z. B. dass bei einer Abstimmung nur zulässige Optionen verwendet werden). So bleiben Datenqualität und Zugriffsschutz stabil, unabhängig vom Client.
 
-Auch die Persistenz ist Teil des Architekturentwurfs: Für schnelle Entwicklung ist eine
-unkomplizierte Datenhaltung sinnvoll, während für ein produktionsnahes Zielbild eine
-robuste Datenbankarchitektur benötigt wird, um Constraints, parallele Zugriffe und Indizes
-zuverlässig zu unterstützen. 
-
-Ein weiterer zentraler Baustein ist ein konsistentes Fehler- und Responseverhalten. Die API
-nutzt ein einheitliches Fehlerformat, das zentral durchgesetzt wird. Das reduziert
-Sonderfälle in der Client-Implementierung, erleichtert das Testen und ist gleichzeitig
-sicherheitsrelevant, weil interne Details kontrolliert behandelt werden und nicht
-unabsichtlich nach außen gelangen.
+Ein weiterer zentraler Baustein ist ein konsistentes Fehler- und Responseverhalten. Die API nutzt ein einheitliches Fehlerformat, das zentral über einen eigenen Exception-Handler (`hive/api/exceptions.py`) durchgesetzt wird. Das reduziert Sonderfälle in der Client-Implementierung, erleichtert das Testen und ist gleichzeitig sicherheitsrelevant, weil interne Details kontrolliert behandelt werden und nicht unabsichtlich nach außen gelangen.
 
 ---
 ## Gewählte Architektur und Schnittstellen
@@ -205,6 +191,9 @@ konsistent absichern müssen.
 
 Flask oder ein sehr minimalistisches Framework wären grundsätzlich möglich, würden aber im Projektzeitraum mehr Eigenbau bedeuten (Struktur, Auth-Integration, konsistente API-Konventionen, Dokumentation/Schema-Erzeugung, Permissions-Patterns). Für unsere Ressourcen wäre das Risiko höher, dass am Ende ein laufendes Projekt geliefert wird, aber Struktur und Qualität leiden.
 
+### Frontend: React, TypeScript und Vite
+Das Frontend ist als Single-Page-Application in React 19 mit TypeScript umgesetzt. TypeScript verbessert die Wartbarkeit, weil API-Responses und Domänenobjekte typisiert sind und Fehler bereits zur Compile-Zeit erkannt werden. Als Build-Tool kommt Vite zum Einsatz, das sehr kurze Entwicklungszyklen ermöglicht. Für das Styling wird Tailwind CSS verwendet, das ein konsistentes, minimalistisches Design ohne umfangreiche eigene Stylesheets erlaubt. Die HTTP-Kommunikation mit dem Backend läuft über eine Axios-Instanz, die JWT-Handling (automatisches Anhängen des Access-Tokens, Token-Refresh) zentral kapselt. Das Frontend ist vollständig containerisiert und wird im Docker-Setup vom Nginx-Proxy nach außen bereitgestellt.
+
 ### Authentifizierung: JWT
 Wir nutzen eine tokenbasierte Authentifizierung (JWT), weil sie gut zu einem Web-Client
 passt und API-Requests ohne serverseitige Sessionverwaltung ermöglicht. Fachlich ist das
@@ -221,14 +210,12 @@ hilfreich, weil Endpunkte, Request/Response-Modelle und Validierungsregeln
 nachvollziehbar bleiben. Gleichzeitig reduziert es Missverständnisse zwischen Frontend
 und Backend, weil die Spezifikation nicht nur „Text“, sondern maschinenlesbar ist.
 
-### Datenhaltung: Django ORM
-Für eine schnelle lokale Entwicklung ist eine gut implementierte Datenhaltung sinnvoll, um
-Setup-Zeit zu minimieren. Für ein produktionsnäheres Zielbild ist eine robuste Datenbank
-wichtig, um Constraints, Performance und parallele Zugriffe zuverlässig zu unterstützen. Hierfür haben wir Django ORM verwendet, da es sinnvoll implemenitert ist. Modelle müssen nur einmal festgelegt werden und können daraufhin sinnvoll validiert werden. Außerdem ist der OOP aufbau einfach verständlich und eignet sich in Kombination mit Python besonders gut.
+### Datenhaltung: SQLite (Dev) und PostgreSQL (Produktion)
+Für die lokale Entwicklung wird SQLite genutzt, da es keinerlei Setup erfordert und direkt mit Django funktioniert. Im Docker-basierten Betrieb wird PostgreSQL 16 als dedizierter Datenbankdienst verwendet, der zuverlässige Constraints, parallele Zugriffe und performante Indizes unterstützt. Der Wechsel zwischen beiden Backends erfolgt ausschließlich über Umgebungsvariablen (`DJANGO_DB_ENGINE`, `DJANGO_DB_HOST` usw.) und erfordert keine Codeänderungen. Als ORM kommt Django ORM zum Einsatz: Modelle werden einmal in Python definiert, Migrationen automatisch generiert und Validierungen konsistent auf Datenbankebene durchgesetzt. Der objektorientierte Aufbau ist gut lesbar und fügt sich natürlich in das übrige Django-Ökosystem ein.
 
 
 ### Qualitätssicherung: Tests und CI/CD
-Qualitätssicherung erfolgt über Tests und systematische Checks. Ziel ist, Kernflüsse wie Authentifizierung, Eventverwaltung und Einladungs-/Teilnahmeprozesse sowie wichtige Berechtigungsregeln reproduzierbar zu prüfen. Als CI/CD-Idee bietet sich eine GitHub-Pipeline an, die Tests automatisch ausführt und Container-Images baut. Der Hauptnutzen liegt hier in der Fehlerfrüherkennung. Fehler sollen durch fehlschlagende Tests gefunden werden, bevor sie in Main gemerged werden.
+Für automatisierte Tests werden `pytest` und `pytest-django` eingesetzt. Diese ermöglichen isolierte, datenbankgestützte Tests ohne zusätzlichen Server-Overhead. Die Testkonfiguration liegt in `pytest.ini` und lässt sich lokal wie auch in einer Pipeline ohne Anpassungen ausführen. Eine CI/CD-Pipeline (z. B. GitHub Actions) ist konzeptionell vorgesehen, wurde im Rahmen des Projekts jedoch nicht implementiert. Der Hauptnutzen läge in der automatischen Ausführung der Testsuite bei jedem Merge-Request, um Regressionen frühzeitig zu erkennen.
 
 ---
 ## Deployment-Ansatz: 3-Tier-Architektur mit Docker
@@ -483,64 +470,27 @@ als Zugriffsschicht auf Daten, sondern stellt die fachliche Integrität des Syst
 Ergänzend wurde eine formale API-Dokumentation über OpenAPI integriert, damit die
 Schnittstelle kontinuierlich nachvollziehbar bleibt und sowohl für Entwicklung als auch
 Tests genutzt werden kann.
-Die Dockerisierung ist als Abgabeziel vorgesehen, um die Anwendung in einer
-reproduzierbaren Umgebung lauffähig bereitzustellen. Dadurch wird sichergestellt, dass
-das System nicht nur auf einzelnen Entwicklerrechnern funktioniert, sondern als definierte
-Instanz startbar ist. Abhängig vom Ausbaustand umfasst das Setup neben dem API-Dienst
-auch eine Datenbank sowie optional weitere unterstützende Komponenten. Abschließend
-wird der Prototyp durch automatisierte Tests, Framework-Checks und eine manuelle End￾to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live-Demo zuverlässig demonstrierbar sind.
+Die Dockerisierung wurde vollständig umgesetzt und umfasst neben dem API-Dienst (`backend`) auch einen dedizierten PostgreSQL-Datenbankcontainer (`db`), den React-Frontend-Container (`frontend`), den Nginx-Reverse-Proxy (`proxy`) mit TLS-Terminierung sowie einen einmalig ausgeführten `cert-init`-Container zur Erzeugung selbstsignierter TLS-Zertifikate. Das gesamte System wird über eine einzige `docker-compose.yml` orchestriert und ist damit reproduzierbar und unabhängig vom Endgerät startbar. Abschließend wurde der Prototyp durch automatisierte Tests und eine manuelle End-to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live-Demo zuverlässig demonstrierbar sind.
 
 ---
 ## Qualitätssicherung und Testergebnisse
-Die Qualitätssicherung in Hive stützt sich auf automatisierte Tests und systematische
-Prüfmechanismen. Automatisierte Tests zielen insbesondere auf die zentralen End-to-End￾Flüsse ab, die für die Nutzbarkeit des Systems entscheidend sind: von der Authentifizierung
-über das Erstellen eines Events und das Einladen von Personen bis hin zur
-Teilnahmebestätigung und weiteren Interaktionen, beispielsweise Abstimmungen.
-Ergänzend werden Framework-Checks eingesetzt, um Konfiguration und grundlegende
-Deploy-Fähigkeit zu prüfen. Diese Kombination ist im Webservice-Kontext besonders
-wichtig, da Fehler häufig nicht ausschließlich aus der fachlichen Logik entstehen, sondern
-durch Konfiguration verursacht werden können, etwa durch CORS-Einstellungen,
-Sicherheitsheader oder Token-Konfigurationen. Durch frühe und wiederholbare Prüfungen
-sinkt das Risiko, dass solche Probleme erst bei der Live-Demo oder in der Abgabe sichtbar
-werden.
-Ein weiterer zentraler Qualitätsfaktor ist die Konsistenz der API. Durch serverseitige
-Validierung, einheitliche Response-Strukturen und ein standardisiertes Fehlerformat
-entstehen weniger Sonderfälle im Client, was die Stabilität der gesamten Anwendung
-erhöht. Zusätzlich trägt eine maschinenlesbare API-Dokumentation (OpenAPI) zur
-Qualitätssicherung bei, da sie als gemeinsame Referenz für Implementierung und Tests
-dient und perspektivisch auch automatisierte Schnittstellenprüfungen (z. B. Contract-Tests)
-ermöglicht.
-Konkrete Testergebnisse und Kennzahlen hängen vom aktuellen Ausbaustand der Test￾Suite ab und können für die finale Abgabe präzisiert werden, beispielsweise durch die
-Angabe, welche Kernflüsse automatisiert abgedeckt sind und wie die Tests in eine CI/CD￾Pipeline eingebunden werden. Unabhängig davon ist das Vorgehen so angelegt, dass
-Testläufe und Checks reproduzierbar durchgeführt und damit als belastbarer Nachweis für
-die Funktionsfähigkeit und Stabilität des Webservices dokumentiert werden können.
+Die Qualitätssicherung in Hive stützt sich auf automatisierte Integrationstests, die mit `pytest` und `pytest-django` umgesetzt sind. Die Testsuite umfasst 19 Testfunktionen in `tests/test_hive_api.py` und deckt alle zentralen End-to-End-Flüsse ab:
+
+- **Authentifizierung**: Registrierung, Login, Duplikat-Erkennung, Zugriff ohne Token
+- **Eventverwaltung**: Erstellen, Validierung, Bearbeitung (Owner vs. Fremdzugriff), Sichtbarkeit
+- **Einladungen**: Token-Ausstellung, Annahme, Ablehnung, Ablauf, Zugriffskontrolle (falscher Nutzer)
+- **Teilnahme**: Selbst-Update inkl. Beiträge und Custom-Field-Antworten
+- **Abstimmungen**: Voting-Constraints (Single-/Multiple-Choice), Ergebnisabfrage, Duplikat-Schutz
+- **Optionale Funktionen**: Kommentare (inkl. Replies), Reaktionen (Toggle), Dokument-Upload, Galerie-Upload
+
+Ergänzend wird über Framework-Checks (Django-System-Checks) sichergestellt, dass Konfiguration und grundlegende Deploy-Fähigkeit korrekt sind. Diese Kombination ist im Webservice-Kontext besonders wichtig, da Fehler häufig nicht ausschließlich aus der fachlichen Logik entstehen, sondern durch Konfiguration verursacht werden können, etwa durch CORS-Einstellungen, Sicherheitsheader oder Token-Konfigurationen.
+
+Ein weiterer zentraler Qualitätsfaktor ist die Konsistenz der API. Durch serverseitige Validierung, einheitliche Response-Strukturen und ein standardisiertes Fehlerformat entstehen weniger Sonderfälle im Client, was die Stabilität der gesamten Anwendung erhöht. Zusätzlich trägt eine maschinenlesbare API-Dokumentation (OpenAPI/`schema.yaml`) zur Qualitätssicherung bei, da sie als gemeinsame Referenz für Implementierung und Tests dient und perspektivisch auch automatisierte Schnittstellenprüfungen (z. B. Contract-Tests) ermöglicht.
+
+Eine CI/CD-Pipeline wurde im Rahmen des Projekts nicht implementiert. Die Testsuite ist jedoch so aufgebaut, dass sie ohne Anpassungen in einer GitHub-Actions-Pipeline ausgeführt werden kann, da alle Konfigurationen über Umgebungsvariablen gesteuert werden und keine externe Infrastruktur vorausgesetzt wird.
 
 ---
 ## Fazit und Ausblick
-Hive zeigt, dass sich die Organisation kleiner Events als klar strukturierter Webservice
-umsetzen lässt, der die typischen Schwächen einer Planung über Messenger-Gruppen
-reduziert. Durch die zentrale Abbildung von Zuständen entsteht eine verlässliche Grundlage
-für Übersicht und Zusammenarbeit in kleinen Gruppen. Die gewählten Architektur- und
-Technologieentscheidungen – REST als Schnittstellenstil, ein modularer Monolith als
-Backend-Architektur und Django/DRF als Umsetzungstechnologie – sind im Rahmen eines
-Semesterprojekts besonders passend, weil sie eine schnelle prototypische Umsetzung mit
-konsistenter Datenhaltung, guter Dokumentierbarkeit und einem klaren Sicherheits- und
-Berechtigungskonzept verbinden. Entscheidend ist dabei, dass diese Entscheidungen
-direkt aus den Anforderungen abgeleitet wurden: Die Zielgruppe benötigt eine einfache,
-schlanke Lösung, der Projektumfang erfordert eine zügige Iteration, und die Verarbeitung
-privater Eventdaten macht eine robuste Zugriffskontrolle notwendig. Vor diesem
-Hintergrund ist der gewählte Ansatz gegenüber verteilten Architekturen oder
-schwergewichtigeren Schnittstellenstilen die pragmatischere und risikoärmere Wahl.
-Als Ausblick bieten sich Funktionen an, die bewusst nicht Teil des minimalen
-Funktionsumfangs sind, aber den Nutzen der Plattform weiter erhöhen können. Dazu
-zählen insbesondere Kommentare, Reaktionen sowie der Upload und das Teilen von
-Dokumenten oder Bildern im Kontext eines Events. Diese Erweiterungen lassen sich bei
-sauberer Beibehaltung der Domänenstruktur als zusätzliche Module ergänzen, ohne den
-Kernfluss (Event → Einladung → Teilnahme) zu gefährden. Ebenso kann das Deployment
-schrittweise produktionsnäher ausgebaut werden, etwa durch eine vollständige Docker-Compose-Umgebung mit separater Datenbank, ergänzenden Diensten für
-Hintergrundverarbeitung oder einem externen Objekt-Storage. Sollte Hive in einem
-späteren Szenario deutlich wachsen, wären weitergehende Architekturentwicklungen
-denkbar, beispielsweise die Auslagerung einzelner, stark belasteter oder fachlich klar
-abgrenzbarer Bereiche. Für die Zielgruppe kleiner Freundesgruppen und den Umfang dieser
-Prüfungsleistung ist der aktuelle Ansatz jedoch die sinnvollste Grundlage, weil er die
-Anforderungen direkt erfüllt und gleichzeitig Erweiterbarkeit ermöglicht.
+Hive zeigt, dass sich die Organisation kleiner Events als klar strukturierter Webservice umsetzen lässt, der die typischen Schwächen einer Planung über Messenger-Gruppen reduziert. Durch die zentrale Abbildung von Zuständen entsteht eine verlässliche Grundlage für Übersicht und Zusammenarbeit in kleinen Gruppen. Die gewählten Architektur- und Technologieentscheidungen – REST als Schnittstellenstil, ein modularer Monolith als Backend-Architektur und Django/DRF als Umsetzungstechnologie – sind im Rahmen eines Semesterprojekts besonders passend, weil sie eine schnelle prototypische Umsetzung mit konsistenter Datenhaltung, guter Dokumentierbarkeit und einem klaren Sicherheits- und Berechtigungskonzept verbinden. Entscheidend ist dabei, dass diese Entscheidungen direkt aus den Anforderungen abgeleitet wurden: Die Zielgruppe benötigt eine einfache, schlanke Lösung, der Projektumfang erfordert eine zügige Iteration, und die Verarbeitung privater Eventdaten macht eine robuste Zugriffskontrolle notwendig. Vor diesem Hintergrund ist der gewählte Ansatz gegenüber verteilten Architekturen oder schwergewichtigeren Schnittstellenstilen die pragmatischere und risikoärmere Wahl.
+
+Als Ausblick bieten sich mehrere Schritte an, die den Reifegrad der Plattform weiter erhöhen. Auf Infrastrukturseite wäre die Einrichtung einer CI/CD-Pipeline (z. B. GitHub Actions) sinnvoll, die die vorhandene Testsuite automatisch bei jedem Merge-Request ausführt. Das Deployment könnte produktionsnäher ausgebaut werden, etwa durch einen externen Objekt-Storage (z. B. MinIO oder S3) für Medien-Uploads anstelle des lokalen Dateisystems sowie durch einen dedizierten Cache- und Task-Queue-Dienst (Redis/Celery), dessen Grundkonfiguration im Backend bereits vorbereitet ist. Auf fachlicher Seite wären Benachrichtigungen (z. B. E-Mail bei Einladung oder Änderung) eine naheliegende Erweiterung, die sich mit der bestehenden Modulstruktur und der vorbereiteten E-Mail-Konfiguration umsetzen ließe. Sollte Hive in einem späteren Szenario deutlich wachsen, wären weitergehende Architekturentwicklungen denkbar, beispielsweise die Auslagerung einzelner, stark belasteter oder fachlich klar abgrenzbarer Bereiche in eigene Dienste. Für die Zielgruppe kleiner Freundesgruppen und den Umfang dieser Prüfungsleistung ist der aktuelle Ansatz jedoch die sinnvollste Grundlage, weil er die Anforderungen direkt erfüllt und gleichzeitig Erweiterbarkeit ermöglicht.
