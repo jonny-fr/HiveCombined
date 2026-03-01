@@ -159,6 +159,7 @@ Anwendungsfall, weil ein Web-Client die Daten direkt konsumieren kann und weil R
 Web-Kontext etabliert, leichtgewichtig und gut testbar ist. Für ein Semesterprojekt ist
 außerdem wichtig, dass Schnittstellen schnell nachvollziehbar und stabil dokumentierbar
 sind.
+
 Warum nicht SOAP? SOAP würde im Vergleich einen deutlich höheren Overhead erzeugen
 (z. B. XML-Schemas/WSDL-Denke, schwergewichtigere Toolchains) und bringt für unseren
 Use Case (kleine Freundesgruppen, typische Web-Client-Nutzung) keinen proportionalen
@@ -424,6 +425,7 @@ Abstimmungen. Das Schnittstellendesign ist darauf ausgerichtet, dass ein Web-Cli
 für typische Nutzeransichten benötigten Daten zuverlässig und konsistent abrufen und
 ändern kann, ohne auf intransparente Zustände oder schwer nachvollziehbare
 Abhängigkeiten angewiesen zu sein.
+
 Ein zentrales Prinzip der Spezifikation ist Einheitlichkeit. Statuscodes werden konsistent
 verwendet, und Fehler folgen einem gemeinsamen Schema, das durch eine zentrale
 Fehlerbehandlung durchgesetzt wird. Dadurch lassen sich Fehlerfälle im Client
@@ -434,6 +436,7 @@ der Client nicht in uneindeutigen Zwischenzuständen endet. Ergänzend wird die 
 dokumentiert: Über ein OpenAPI-Schema liegt eine maschinenlesbare Spezifikation vor, die
 die Schnittstelle nachvollziehbar macht und als Grundlage für automatisierte Prüfungen (z.
 B. Konsistenz- oder Contract-Tests) dienen kann.
+
 Berechtigungen sind als fester Bestandteil der Schnittstelle definiert, da Hive
 personenbezogene und eventbezogene Daten verwaltet. Bestimmte Aktionen sind auf die
 organisierende Person beschränkt, während Teilnehmende innerhalb eines Events nur in
@@ -454,6 +457,7 @@ Trennung von Verantwortlichkeiten entsteht. Dieser Schritt ist für die spätere
 entscheidend, weil sich strukturelle Entscheidungen aus der Anfangsphase direkt darauf
 auswirken, wie einfach sich neue Funktionen ergänzen lassen und wie stark fachliche
 Bereiche im Code voneinander abhängig sind.
+
 Darauf aufbauend wurden die Domänenmodelle entworfen und die Persistenz über
 Migrationen vorbereitet. Bei Hive ist ein sauberer Domänenentwurf besonders wichtig, weil
 zentrale Funktionen stark über Beziehungen verbunden sind: Einladungen beziehen sich
@@ -462,6 +466,7 @@ stehen wiederum in Beziehung zu Events und Teilnehmenden. Wenn diese
 Zusammenhänge konsistent modelliert sind, lassen sich fachliche Regeln und
 Berechtigungen zuverlässig umsetzen, etwa die Prüfung, ob ein Nutzer zu einem Event
 gehört und damit bestimmte Aktionen ausführen darf.
+
 Im nächsten Schritt wurden die API-Komponenten implementiert. Dabei wurden
 Validierungen und Berechtigungen serverseitig integriert, damit fachliche Regeln nicht nur
 in der Oberfläche „vorausgesetzt“, sondern im Webservice verbindlich durchgesetzt
