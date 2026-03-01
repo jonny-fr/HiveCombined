@@ -128,10 +128,10 @@ von Einladungstokens in gehashter Form. Ein konsistentes Fehlerformat ist
 zudem sicherheitsrelevant, weil es verhindert, dass interne Details ungewollt preisgegeben
 werden, und weil es Angriffsflächen durch uneindeutige Fehlermeldungen reduziert.
 Wartbarkeit ist wichtig, weil Hive perspektivisch um weitere Funktionen erweitert werden
-soll. Daraus folgt die Entscheidung, Domänen in klar getrennten Modulen zu organisieren
+soll. Daraus folgt die Entscheidung, Domänen mithilfe von Django Apps in klar getrennten Modulen zu organisieren
 und zentrale Logik nicht vollständig in Controller- oder View-Schichten zu belassen. Eine
 geordnete, modulare Codebasis erleichtert es, spätere Features wie Uploads oder
-Kommentare hinzuzufügen, ohne bestehende Kernprozesse zu destabilisieren.
+Kommentare hinzuzufügen, ohne bestehende Kernprozesse zu destabilisieren. So erreichen wir eine modulare monolithische Architektur, welche nachfolgend als "modularer Monolith" bezeichnet wird. 
 Performance ist im aktuellen Umfang nicht als Hochlast-Szenario dimensioniert, soll aber
 so angelegt sein, dass typische Lasten kleiner Gruppen stabil laufen und spätere Skalierung
 nicht verbaut wird. Tokenbasierte Authentifizierung unterstützt dies, weil Requests
@@ -192,7 +192,7 @@ konsistent absichern müssen.
 Flask oder ein sehr minimalistisches Framework wären grundsätzlich möglich, würden aber im Projektzeitraum mehr Eigenbau bedeuten (Struktur, Auth-Integration, konsistente API-Konventionen, Dokumentation/Schema-Erzeugung, Permissions-Patterns). Für unsere Ressourcen wäre das Risiko höher, dass am Ende ein laufendes Projekt geliefert wird, aber Struktur und Qualität leiden.
 
 ### Frontend: React, TypeScript und Vite
-Das Frontend ist als Single-Page-Application in React 19 mit TypeScript umgesetzt. TypeScript verbessert die Wartbarkeit, weil API-Responses und Domänenobjekte typisiert sind und Fehler bereits zur Compile-Zeit erkannt werden. Als Build-Tool kommt Vite zum Einsatz, das sehr kurze Entwicklungszyklen ermöglicht. Für das Styling wird Tailwind CSS verwendet, das ein konsistentes, minimalistisches Design ohne umfangreiche eigene Stylesheets erlaubt. Die HTTP-Kommunikation mit dem Backend läuft über eine Axios-Instanz, die JWT-Handling (automatisches Anhängen des Access-Tokens, Token-Refresh) zentral kapselt. Das Frontend ist vollständig containerisiert und wird im Docker-Setup vom Nginx-Proxy nach außen bereitgestellt.
+Das Frontend ist als Single-Page-Application in React 19 mit TypeScript umgesetzt. TypeScript verbessert die Wartbarkeit, weil API-Responses und Domänenobjekte typisiert sind und Fehler bereits zur Compile-Zeit erkannt werden. Als Build-Tool kommt Vite zum Einsatz, das sehr kurze Entwicklungszyklen ermöglicht. Für das Styling wird Tailwind CSS verwendet, das ein konsistentes, minimalistisches Design ohne umfangreiche eigene Stylesheets erlaubt. Die HTTPS-Kommunikation mit dem Backend läuft über eine Axios-Instanz, die JWT-Handling (automatisches Anhängen des Access-Tokens, Token-Refresh) zentral kapselt. Das Frontend ist vollständig containerisiert und wird im Docker-Setup vom Nginx-Proxy nach außen bereitgestellt.
 
 ### Authentifizierung: JWT
 Wir nutzen eine tokenbasierte Authentifizierung (JWT), weil sie gut zu einem Web-Client
@@ -236,7 +236,7 @@ typische Cloud-Modelle passt. Für unser Projekt ist jedoch ein cloud-neutraler 
 sinnvoller: Er vermeidet Providerabhängigkeiten und hält den Fokus auf Architektur,
 Schnittstellen und Implementierungsqualität statt auf cloud-spezifische Konfiguration.
 Gleichzeitig schließt die gewählte Struktur eine spätere Migration nicht aus, da
-standardisierte Komponenten (HTTP-API, Container, Datenbank) typische Voraussetzungen
+standardisierte Komponenten (HTTPS-API, Container, Datenbank) typische Voraussetzungen
 für Cloud-Deployments sind.
 
 ---
@@ -256,7 +256,7 @@ gesteuert. Für die Entwicklung können diese in einer lokalen Environment-Datei
 werden. Dieses Vorgehen ist organisatorisch sinnvoll, weil Teammitglieder unabhängig
 voneinander arbeiten können. Gleichzeitig wird damit der Übergang in eine
 produktionsnahe Umgebung erleichtert, da containerisierte Deployments und CI/CD-Pipelines ebenfalls typischerweise auf environmentbasierte Konfigurationen setzen.
-Kommuniziert wird über HTTP mit JSON als Payload, da dies dem Standard für REST-APIs
+Kommuniziert wird über HTTPS mit JSON als Payload, da dies dem Standard für REST-APIs
 entspricht und von Web-Clients direkt unterstützt wird. Die Laufzeitumgebung basiert auf
 Python; als Framework kommen Django und Django REST Framework zum Einsatz. Die
 Auswahl zielt auf ein stabiles, gut dokumentiertes Ökosystem, das im Projektkontext eine
@@ -415,7 +415,7 @@ zwingend berühren.
 ---
 ## API-Spezifikation
 Die API ist ressourcenorientiert aufgebaut und stellt die zentralen Objekte der Domäne über
-standardisierte HTTP-Semantik bereit. Funktional gliedert sich die Schnittstelle in mehrere
+standardisierte HTTPS-Semantik bereit. Funktional gliedert sich die Schnittstelle in mehrere
 Bereiche: einen Authentifizierungsbereich für Registrierung und Tokenverwaltung, einen
 Eventbereich für das Erstellen, Anzeigen und Bearbeiten von Events sowie ergänzende
 Teilbereiche für Einladungen und Teilnahme. Zusätzlich werden planungsrelevante Inhalte
@@ -475,6 +475,16 @@ als Zugriffsschicht auf Daten, sondern stellt die fachliche Integrität des Syst
 Ergänzend wurde eine formale API-Dokumentation über OpenAPI integriert, damit die
 Schnittstelle kontinuierlich nachvollziehbar bleibt und sowohl für Entwicklung als auch
 Tests genutzt werden kann.
+
+Nachdem die API vollständig implementiert und dokumentiert war, wurde auf dieser Grundlage
+das Frontend entwickelt. Die OpenAPI-Spezifikation diente dabei als verbindliche Referenz:
+Endpunkte, Request- und Response-Strukturen sowie Validierungsregeln waren maschinenlesbar
+beschrieben und konnten direkt in die TypeScript-Typdefinitionen und die API-Client-Schicht
+des Frontends übernommen werden. Dieses Vorgehen – erst API fertigstellen und dokumentieren,
+dann den Client auf Basis der Spezifikation umsetzen – reduzierte Abstimmungsaufwand und
+stellte sicher, dass Frontend und Backend konsistent miteinander interagieren, ohne dass
+Annahmen über die Schnittstelle implizit im Client-Code verankert wurden.
+
 Die Dockerisierung wurde vollständig umgesetzt und umfasst neben dem API-Dienst (`backend`) auch einen dedizierten PostgreSQL-Datenbankcontainer (`db`), den React-Frontend-Container (`frontend`), den Nginx-Reverse-Proxy (`proxy`) mit TLS-Terminierung sowie einen einmalig ausgeführten `cert-init`-Container zur Erzeugung selbstsignierter TLS-Zertifikate. Das gesamte System wird über eine einzige `docker-compose.yml` orchestriert und ist damit reproduzierbar und unabhängig vom Endgerät startbar. Abschließend wurde der Prototyp durch automatisierte Tests und eine manuelle End-to-End-Validierung abgesichert, sodass die Kernflüsse stabil nachweisbar und in der Live-Demo zuverlässig demonstrierbar sind.
 
 ---
